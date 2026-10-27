@@ -21,10 +21,6 @@ enum Brand {
             startPoint: .top, endPoint: .bottom
         )
     }
-
-    static func buttonFill(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? .white.opacity(0.09) : .white
-    }
 }
 
 /// A top-lit surface with a hairline border.
@@ -39,7 +35,8 @@ struct CardBackground: ViewModifier {
     }
 }
 
-/// Netty's flat button: hairline border, no bezel.
+/// Netty's flat button: the cards' wash and hairline, so it sits on the
+/// popover's translucent material instead of standing out from it.
 struct PlainCardButtonStyle: ButtonStyle {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.isEnabled) private var isEnabled
@@ -49,8 +46,8 @@ struct PlainCardButtonStyle: ButtonStyle {
             .font(.system(size: 12, weight: .medium))
             .padding(.horizontal, 12)
             .frame(height: 28)
-            .background(Brand.buttonFill(scheme).opacity(configuration.isPressed ? 0.6 : 1),
-                        in: .rect(cornerRadius: Brand.buttonRadius))
+            .background(Brand.cardWash(scheme), in: .rect(cornerRadius: Brand.buttonRadius))
+            .background(.primary.opacity(configuration.isPressed ? 0.08 : 0), in: .rect(cornerRadius: Brand.buttonRadius))
             .overlay(RoundedRectangle(cornerRadius: Brand.buttonRadius).strokeBorder(Brand.hairline(scheme)))
             .opacity(isEnabled ? 1 : 0.45)
             .contentShape(.rect)
