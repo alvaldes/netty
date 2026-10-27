@@ -56,11 +56,9 @@ struct ConnectionSettings: View {
 
             SettingsCard(title: "Public IP", symbol: "globe",
                          subtitle: "Your public IP is the address websites see. Netty asks Cloudflare's 1.1.1.1, the same host it already measures latency against, over HTTPS: no new party learns anything.") {
-                SettingRow(title: "Show public IP",
-                           detail: "Looked up when you open the popover, on a new network or every 5 minutes at most. Off: never looked up.") {
-                    Toggle("Show public IP", isOn: $settings.showsPublicIP)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
+                SettingRow(title: "When it is looked up",
+                           detail: "Only while the popover shows it: when you open the popover, on a new network or every 5 minutes at most. Hide it in Settings › Popover and Netty never looks it up.") {
+                    EmptyView()
                 }
             }
 

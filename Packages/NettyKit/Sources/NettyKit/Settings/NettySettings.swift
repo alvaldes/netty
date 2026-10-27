@@ -58,12 +58,10 @@ public final class NettySettings {
         }
     }
 
-    /// Looks up the public IP at Cloudflare (1.1.1.1) when the popover shows it.
+    /// The public IP is looked up at Cloudflare (1.1.1.1) only while the popover shows it.
     public var showsPublicIP: Bool {
-        didSet {
-            defaults.set(showsPublicIP, forKey: Key.showsPublicIP)
-            onChange?()
-        }
+        get { popoverLayout.isVisible(.publicIP) }
+        set { popoverLayout.setVisible(newValue, for: .publicIP) }
     }
 
     public var iconStyle: MenuBarIconStyle {
@@ -78,6 +76,7 @@ public final class NettySettings {
         }
     }
 
+    /// Also decides whether the public IP is looked up (`showsPublicIP`).
     public var popoverLayout: PopoverLayout {
         didSet { store(popoverLayout, forKey: Key.popoverLayout) }
     }
@@ -100,7 +99,8 @@ public final class NettySettings {
         static let notifiesWhenOffline = "notifiesWhenOffline"
         static let notifiesWhenBackOnline = "notifiesWhenBackOnline"
         static let iconStyle = "iconStyle"
-        static let showsPublicIP = "showsPublicIP"
+        /// Replaced by the popover's Public IP element.
+        static let legacyShowsPublicIP = "showsPublicIP"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let clickBehavior = "clickBehavior"
         static let popoverLayout = "popoverLayout"
@@ -115,11 +115,16 @@ public final class NettySettings {
         skipsMeteredNetworks = defaults.object(forKey: Key.skipsMeteredNetworks) as? Bool ?? true
         notifiesWhenOffline = defaults.object(forKey: Key.notifiesWhenOffline) as? Bool ?? true
         notifiesWhenBackOnline = defaults.object(forKey: Key.notifiesWhenBackOnline) as? Bool ?? true
-        showsPublicIP = defaults.object(forKey: Key.showsPublicIP) as? Bool ?? true
         iconStyle = Self.decoded(MenuBarIconStyle.self, forKey: Key.iconStyle, in: defaults) ?? .defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
         popoverLayout = Self.decoded(PopoverLayout.self, forKey: Key.popoverLayout, in: defaults)?.normalized ?? .defaults
         clickBehavior = Self.decoded(ClickBehavior.self, forKey: Key.clickBehavior, in: defaults)?.validated ?? .defaults
+        // The old switch moved into the popover layout.
+        if defaults.object(forKey: Key.legacyShowsPublicIP) as? Bool == false {
+            popoverLayout.setVisible(false, for: .publicIP)
+            if let data = try? JSONEncoder().encode(popoverLayout) { defaults.set(data, forKey: Key.popoverLayout) }
+        }
+        defaults.removeObject(forKey: Key.legacyShowsPublicIP)
     }
 
     public func resetQualityRules() {

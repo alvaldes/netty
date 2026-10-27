@@ -19,7 +19,6 @@ struct PopoverModel {
     var localAddress: String?
     /// The public IP; `nil` while unknown.
     var publicAddress: String?
-    var showsPublicIP = true
     /// Which sections show, in which order.
     var layout = PopoverLayout.defaults
 
@@ -50,7 +49,6 @@ extension PopoverModel {
             canRequestWiFiName: monitor.path?.interface == .wifi && location.status != .granted,
             localAddress: monitor.localAddress,
             publicAddress: publicAddress.address,
-            showsPublicIP: publicAddress.isEnabled,
             layout: layout
         )
     }

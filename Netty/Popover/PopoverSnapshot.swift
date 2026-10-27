@@ -47,7 +47,12 @@ enum PopoverSnapshot {
         custom.layout.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
         custom.layout.setVisible(false, for: .status)
         custom.layout.setVisible(false, for: .quality)
-        return [("online", online), ("degraded", degraded), ("offline", offline), ("custom-layout", custom)]
+        var elements = online
+        for element: PopoverElement in [.jitter, .loss, .vpn, .localIP, .publicIP, .responsiveness] {
+            elements.layout.setVisible(false, for: element)
+        }
+        return [("online", online), ("degraded", degraded), ("offline", offline), ("custom-layout", custom),
+                ("only-latency", elements)]
     }
 
     private static func render(_ view: some View, appearance: NSAppearance.Name, to url: URL) {

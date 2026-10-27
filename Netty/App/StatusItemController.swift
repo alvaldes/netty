@@ -195,7 +195,8 @@ extension StatusItemController {
             perform(.showPopover)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [self] in
                 print("CHECK popover shown:", isPopoverVisible)
-                print("CHECK local address:", monitor.localAddress != nil, "public address:", publicAddress.address != nil)
+                print("CHECK local address:", monitor.localAddress != nil, "public address:", publicAddress.address != nil,
+                      "lookup enabled:", publicAddress.isEnabled)
                 if let view = popover.contentViewController?.view,
                    let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
                     view.cacheDisplay(in: view.bounds, to: bitmap)

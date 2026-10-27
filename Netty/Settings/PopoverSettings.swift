@@ -11,17 +11,19 @@ struct PopoverSettings: View {
         HStack(alignment: .top, spacing: 20) {
             VStack(spacing: 16) {
                 SettingsCard(title: "Sections", symbol: "rectangle.stack",
-                             subtitle: "Drag to reorder. Switch off what you don't need.") {
+                             subtitle: "Drag to reorder. Switch off a section, or just the parts you don't need.") {
                     List {
                         ForEach(settings.popoverLayout.entries, id: \.section) { entry in
-                            SectionRow(section: entry.section, isVisible: visibility(of: entry.section))
+                            SectionRow(section: entry.section, isVisible: visibility(of: entry.section),
+                                       element: { element(visibility: $0) })
                         }
                         .onMove { settings.popoverLayout.move(fromOffsets: $0, toOffset: $1) }
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .scrollDisabled(true)
-                    .frame(height: CGFloat(settings.popoverLayout.entries.count) * 52)
+                    .frame(height: CGFloat(settings.popoverLayout.entries.count) * 40
+                        + CGFloat(PopoverElement.allCases.count) * 22)
                 }
                 HStack {
                     Spacer()
@@ -50,6 +52,11 @@ struct PopoverSettings: View {
         return model
     }
 
+    private func element(visibility element: PopoverElement) -> Binding<Bool> {
+        Binding(get: { settings.popoverLayout.isSwitchedOn(element) },
+                set: { settings.popoverLayout.setVisible($0, for: element) })
+    }
+
     private func visibility(of section: PopoverSection) -> Binding<Bool> {
         Binding(get: { settings.popoverLayout.isVisible(section) },
                 set: { settings.popoverLayout.setVisible($0, for: section) })
@@ -59,15 +66,24 @@ struct PopoverSettings: View {
 private struct SectionRow: View {
     let section: PopoverSection
     @Binding var isVisible: Bool
+    let element: (PopoverElement) -> Binding<Bool>
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "line.3.horizontal")
                 .foregroundStyle(.tertiary)
+                .padding(.top, 2)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(section.title)
-                Text(section.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                ForEach(section.elements, id: \.self) { item in
+                    Toggle(item.title, isOn: element(item))
+                        .toggleStyle(.checkbox)
+                        .font(.caption)
+                        .frame(height: 18)
+                        .help(item == .publicIP ? "Looked up at Cloudflare's 1.1.1.1 only while it shows." : "")
+                }
+                .disabled(!isVisible)
             }
             Spacer(minLength: 8)
             Toggle(section.title, isOn: $isVisible)
@@ -91,12 +107,23 @@ private extension PopoverSection {
         }
     }
 
-    var detail: String {
+}
+
+private extension PopoverElement {
+    var title: String {
         switch self {
-        case .status: "Color and for how long"
-        case .quality: "Latency, jitter, loss"
-        case .speed: "Last test and its button"
-        case .network: "Wi-Fi or interface, VPN"
+        case .statusDuration: "How long it has lasted"
+        case .latency: "Latency"
+        case .jitter: "Jitter"
+        case .loss: "Packet loss"
+        case .download: "Download"
+        case .upload: "Upload"
+        case .responsiveness: "Responsiveness"
+        case .speedTestButton: "Run Speed Test button"
+        case .interface: "Wi-Fi or interface"
+        case .vpn: "VPN"
+        case .localIP: "Local IP"
+        case .publicIP: "Public IP"
         }
     }
 }

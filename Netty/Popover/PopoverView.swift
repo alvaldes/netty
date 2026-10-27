@@ -65,9 +65,12 @@ private struct StatusHeader: View {
                 Text(model.status.title)
                     .font(.system(size: 20, weight: .semibold))
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    Text(subtitle(now: context.date))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                    let subtitle = subtitle(now: context.date)
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Spacer(minLength: 0)
@@ -89,10 +92,10 @@ private struct StatusHeader: View {
 
     private func subtitle(now: Date) -> String {
         var parts: [String] = []
-        if let since = model.statusSince {
-            parts.append("for " + StatusDuration.text(seconds: now.timeIntervalSince(since)))
-        } else {
+        if model.statusSince == nil {
             parts.append("Testing the connection")
+        } else if let since = model.statusSince, model.layout.isVisible(.statusDuration) {
+            parts.append("for " + StatusDuration.text(seconds: now.timeIntervalSince(since)))
         }
         let reasons = model.degradedReasons.map(\.title)
         if !reasons.isEmpty {
@@ -110,9 +113,15 @@ private struct MetricsRow: View {
     var body: some View {
         Grid(horizontalSpacing: 8) {
             GridRow {
-                MetricTile(title: "Latency", value: milliseconds(model.metrics.latency))
-                MetricTile(title: "Jitter", value: milliseconds(model.metrics.jitter))
-                MetricTile(title: "Loss", value: loss)
+                if model.layout.isVisible(.latency) {
+                    MetricTile(title: "Latency", value: milliseconds(model.metrics.latency))
+                }
+                if model.layout.isVisible(.jitter) {
+                    MetricTile(title: "Jitter", value: milliseconds(model.metrics.jitter))
+                }
+                if model.layout.isVisible(.loss) {
+                    MetricTile(title: "Loss", value: loss)
+                }
             }
         }
     }
@@ -165,35 +174,49 @@ private struct SpeedCard: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
-            HStack(spacing: 8) {
-                SpeedValue(title: "↓ Download", mbps: model.lastSpeed?.download)
-                SpeedValue(title: "↑ Upload", mbps: model.lastSpeed?.upload)
+            if model.layout.isVisible(.download) || model.layout.isVisible(.upload) {
+                HStack(spacing: 8) {
+                    if model.layout.isVisible(.download) {
+                        SpeedValue(title: "↓ Download", mbps: model.lastSpeed?.download)
+                    }
+                    if model.layout.isVisible(.upload) {
+                        SpeedValue(title: "↑ Upload", mbps: model.lastSpeed?.upload)
+                    }
+                }
             }
-            HStack {
-                if let rpm = model.lastSpeed?.responsiveness {
+            if model.layout.isVisible(.responsiveness) || model.layout.isVisible(.speedTestButton) {
+                speedFooter
+            }
+        }
+        .padding(14)
+        .card()
+    }
+
+    private var speedFooter: some View {
+        HStack {
+            if model.layout.isVisible(.responsiveness), let rpm = model.lastSpeed?.responsiveness {
                     Text("Responsiveness \(rpm.formatted(.number.precision(.fractionLength(0)))) RPM")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(action: runSpeedTest) {
-                    if model.isTestingSpeed {
-                        HStack(spacing: 6) {
-                            ProgressView().controlSize(.mini)
-                            Text("Testing…")
+                if model.layout.isVisible(.speedTestButton) {
+                    Button(action: runSpeedTest) {
+                        if model.isTestingSpeed {
+                            HStack(spacing: 6) {
+                                ProgressView().controlSize(.mini)
+                                Text("Testing…")
+                            }
+                        } else {
+                            Text("Run Speed Test")
                         }
-                    } else {
-                        Text("Run Speed Test")
                     }
+                    .buttonStyle(PlainCardButtonStyle())
+                    .disabled(model.isTestingSpeed || !model.isOnline)
+                    .keyboardShortcut("t")
+                    .focusEffectDisabled()
                 }
-                .buttonStyle(PlainCardButtonStyle())
-                .disabled(model.isTestingSpeed || !model.isOnline)
-                .keyboardShortcut("t")
-                .focusEffectDisabled()
-            }
         }
-        .padding(14)
-        .card()
     }
 
     @ViewBuilder private var measuredLabel: some View {
@@ -243,13 +266,15 @@ private struct NetworkRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            interfaceLine
-            if model.localAddress != nil || (model.showsPublicIP && model.isOnline) {
+            if model.layout.isVisible(.interface) || model.layout.isVisible(.vpn) {
+                interfaceLine
+            }
+            if showsLocal || showsPublic {
                 HStack(spacing: 16) {
-                    if let local = model.localAddress {
+                    if showsLocal, let local = model.localAddress {
                         AddressLabel(title: "Local IP", address: local)
                     }
-                    if model.showsPublicIP && model.isOnline {
+                    if showsPublic {
                         AddressLabel(title: "Public IP", address: model.publicAddress)
                     }
                     Spacer(minLength: 0)
@@ -258,27 +283,35 @@ private struct NetworkRow: View {
         }
     }
 
+    private var showsLocal: Bool { model.layout.isVisible(.localIP) && model.localAddress != nil }
+    /// Only online: offline there is nobody to ask.
+    private var showsPublic: Bool { model.layout.isVisible(.publicIP) && model.isOnline }
+
     private var interfaceLine: some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
-                .frame(width: 16)
-                .accessibilityHidden(true)
-            Text(name)
-                .font(.system(size: 12))
-            if model.canRequestWiFiName {
-                Button("Show name", action: requestWiFiName)
-                    .buttonStyle(.link)
+            if model.layout.isVisible(.interface) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 16)
+                    .accessibilityHidden(true)
+                Text(name)
                     .font(.system(size: 12))
+                if model.canRequestWiFiName {
+                    Button("Show name", action: requestWiFiName)
+                        .buttonStyle(.link)
+                        .font(.system(size: 12))
+                }
             }
             Spacer()
-            Text(model.path?.isVPN == true ? "VPN on" : "VPN off")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .overlay(Capsule().strokeBorder(Brand.hairline(scheme)))
+            if model.layout.isVisible(.vpn) {
+                Text(model.path?.isVPN == true ? "VPN on" : "VPN off")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .overlay(Capsule().strokeBorder(Brand.hairline(scheme)))
+            }
         }
     }
 
