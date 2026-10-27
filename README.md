@@ -18,7 +18,7 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 - **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, whether a VPN carries your traffic, and your local and public IP (click one to copy it).
 - **Your popover, your order:** show, hide and drag its sections (Status, Quality, Speed, Network), and switch off single parts such as jitter, the VPN badge or either IP, in Settings › Popover, with a live preview.
 - **Left and right click:** each opens the popover, a quick menu (Settings, Quit), a speed test or Settings, as you choose.
-- **Menu bar icon your way:** color (a glyph such as `● ◍ ◌` or an SF Symbol, tinted by status) or black & white (a circle SF Symbol per status, such as `circle.fill`, `circle.dashed.inset.fill`, `circle.dotted`), your own SVG, PDF or PNG, and its size.
+- **Menu bar icon your way:** color (tinted green, yellow or red) or black & white, a circle SF Symbol per status (`circle.fill`, `circle.dashed`, `circle.and.line.horizontal` by default, five more to pick from) or your own SVG, PDF or PNG, and its size.
 
 | Menu Bar Icon | Connection |
 |---|---|

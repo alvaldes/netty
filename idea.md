@@ -138,10 +138,10 @@ Two modes, chosen in Settings:
 
 | Mode | How the status shows |
 |---|---|
-| **Color** | One glyph, tinted green / yellow / red. |
-| **Monochrome** | A template image (adapts to light / dark menu bar), so color cannot carry the status: each status uses its **own SF Symbol**, from `circle`, `circle.fill`, `circle.slash`, `circle.dotted`, `circle.dashed`, `circle.dashed.inset.fill`, `circlebadge`, `circlebadge.fill`, `circle.circle`, `circle.circle.fill`, `circle.and.line.horizontal`. Defaults: Online `circle.fill`, Degraded `circle.dashed.inset.fill`, Offline `circle.dotted`. No characters. |
+| **Color** | One SF Symbol per status, tinted green / yellow / red. |
+| **Monochrome** | A template image (adapts to light / dark menu bar), so color cannot carry the status: the symbol's **shape** does. |
 
-- **Glyph sets:** `○ ● ◯ ⬤ ◉ ◎ ◌ ◍` and SF Symbols equivalents. Glyphs are drawn into an `NSImage` with a fixed font so they look the same on every Mac, not inserted as menu bar text.
-- **Emoji (`🔘`):** always renders in its own colors, so it is offered in Color mode only and cannot be tinted.
+- **Symbols (both modes):** `circle`, `circle.fill`, `circle.slash`, `circle.dotted`, `circle.dashed`, `circle.dashed.inset.fill`, `circle.circle`, `circle.and.line.horizontal`. Defaults: Online `circle.fill`, Degraded `circle.dashed`, Offline `circle.and.line.horizontal`. No text characters or emoji; ones saved by earlier versions show as the default.
+- **Picker:** a grid of the symbols, drawn with a readable name (SwiftUI's `Menu` drops item images on macOS).
 - **Custom icons:** the user imports one image per status (SVG, PDF or PNG). In Monochrome mode only the image's alpha is used.
 - **Adjustable:** glyph per status, size (assumption: 10–18 pt), live preview in Settings showing the three states.

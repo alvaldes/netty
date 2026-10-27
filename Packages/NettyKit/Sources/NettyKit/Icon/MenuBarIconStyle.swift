@@ -1,17 +1,12 @@
 /// What the menu bar icon draws for one status.
 nonisolated public enum IconGlyph: Sendable, Equatable, Codable {
-    /// A text character such as `●` or `◍`.
+    /// A text character such as `●`. No longer offered: kept so styles saved
+    /// by earlier versions decode, and drawn as the status's default symbol.
     case character(String)
     /// An SF Symbol name.
     case symbol(String)
     /// An image the user imported, by its file name in Netty's icon folder.
     case custom(fileName: String)
-
-    /// Emoji draw in their own colors: they can be neither tinted nor used as a template.
-    public var isEmoji: Bool {
-        guard case .character(let text) = self else { return false }
-        return text.unicodeScalars.contains { $0.properties.isEmojiPresentation || $0.value == 0xFE0F }
-    }
 }
 
 /// One glyph per status.
@@ -84,19 +79,17 @@ nonisolated public struct MenuBarIconStyle: Sendable, Equatable, Codable {
     }
 
     public static let sizeRange = 10.0...18.0
-    /// Offered in Color mode.
-    public static let characters = ["○", "●", "◯", "⬤", "◉", "◎", "◌", "◍", "🔘"]
-    /// The SF Symbols offered, and in Black & White the only glyphs besides imported images.
-    public static let monochromeSymbols = [
+    /// The SF Symbols offered in both modes, besides imported images.
+    public static let symbols = [
         "circle", "circle.fill", "circle.slash", "circle.dotted", "circle.dashed", "circle.dashed.inset.fill",
-        "circlebadge", "circlebadge.fill", "circle.circle", "circle.circle.fill", "circle.and.line.horizontal",
+        "circle.circle", "circle.and.line.horizontal",
     ]
 
     public var mode = Mode.color
     /// Used in Color mode.
-    public var colorGlyphs = StatusGlyphs(all: .character("●"))
+    public var colorGlyphs = Self.defaultGlyphs
     /// Used in Monochrome mode, where each status needs its own shape.
-    public var monochromeGlyphs = Self.defaultMonochromeGlyphs
+    public var monochromeGlyphs = Self.defaultGlyphs
     /// Point size, kept within `sizeRange`.
     public var size = 14.0
 
@@ -104,24 +97,24 @@ nonisolated public struct MenuBarIconStyle: Sendable, Equatable, Codable {
 
     public static let defaults = MenuBarIconStyle()
 
-    /// The SF Symbol counterparts of ● ◍ ◌: full, partly filled, dotted.
-    static let defaultMonochromeGlyphs = StatusGlyphs(
-        online: .symbol("circle.fill"), degraded: .symbol("circle.dashed.inset.fill"), offline: .symbol("circle.dotted"))
+    /// Full, broken, crossed out: the shape alone tells the status apart in Black & White.
+    static let defaultGlyphs = StatusGlyphs(
+        online: .symbol("circle.fill"), degraded: .symbol("circle.dashed"), offline: .symbol("circle.and.line.horizontal"))
 
     public func appearance(for status: ConnectionStatus?) -> IconAppearance {
         let size = min(max(size, Self.sizeRange.lowerBound), Self.sizeRange.upperBound)
         // The first check has not decided yet.
         let opacity = status == nil ? 0.4 : 1
+        var glyph = (mode == .color ? colorGlyphs : monochromeGlyphs)[status]
+        // SF Symbols and imported images only; a character saved by an earlier version uses the default.
+        if case .character = glyph { glyph = Self.defaultGlyphs[status] }
         switch mode {
         case .color:
-            let glyph = colorGlyphs[status]
-            let isTintable = if case .custom = glyph { false } else { !glyph.isEmoji }
+            // Imported images keep their own colors; symbols take the status color.
+            let isTintable = if case .custom = glyph { false } else { true }
             return IconAppearance(glyph: glyph, size: size, isTemplate: false,
                                   tint: isTintable ? status.tint : nil, opacity: opacity)
         case .monochrome:
-            var glyph = monochromeGlyphs[status]
-            // SF Symbols and imported images only; a character saved by an earlier version uses the default.
-            if case .character = glyph { glyph = Self.defaultMonochromeGlyphs[status] }
             return IconAppearance(glyph: glyph, size: size, isTemplate: true, tint: nil, opacity: opacity)
         }
     }

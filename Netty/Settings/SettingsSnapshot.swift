@@ -32,6 +32,13 @@ enum SettingsSnapshot {
             render(view, appearance: appearance, to: output.appending(path: "icon-monochrome-\(name).png"))
         }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            let grid = GlyphGrid(current: .symbol("circle.dashed"), select: { _ in })
+                .padding(12)
+                .background(Color(nsColor: .windowBackgroundColor))
+            render(grid, appearance: appearance, size: CGSize(width: 400, height: 180),
+                   to: output.appending(path: "glyph-grid-\(name).png"))
+        }
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             let view = OnboardingView(settings: settings, location: LocationPermission(),
                                       notifications: NotificationPermission(), requestNotifications: {})
                 .background(Color(nsColor: .windowBackgroundColor))

@@ -106,32 +106,9 @@ struct IconSettings: View {
 
     private func glyphMenu(for status: ConnectionStatus) -> some View {
         // What the icon draws, so a saved character shows as the symbol it falls back to.
-        let current = settings.iconStyle.appearance(for: status).glyph
-        return Menu {
-            // Black & White uses SF Symbols only: their shapes stay crisp in the menu bar.
-            if settings.iconStyle.mode == .color {
-                Section("Characters") {
-                    ForEach(MenuBarIconStyle.characters, id: \.self) { character in
-                        Button(character) { glyphs.wrappedValue[status] = .character(character) }
-                    }
-                }
-            }
-            Section("Symbols") {
-                ForEach(MenuBarIconStyle.monochromeSymbols, id: \.self) { name in
-                    Button { glyphs.wrappedValue[status] = .symbol(name) } label: {
-                        Label(IconGlyph.symbol(name).title, systemImage: name)
-                    }
-                }
-            }
-            Divider()
-            Button("Import Image…") { importImage(for: status) }
-        } label: {
-            switch current {
-            case .symbol(let name): Label(current.title, systemImage: name)
-            default: Text(current.title)
-            }
-        }
-        .fixedSize()
+        GlyphPicker(current: settings.iconStyle.appearance(for: status).glyph,
+                    select: { glyphs.wrappedValue[status] = $0 },
+                    importImage: { importImage(for: status) })
     }
 
     private func importImage(for status: ConnectionStatus) {
@@ -175,7 +152,80 @@ private extension ClickAction {
     }
 }
 
+/// A button showing the current glyph; it opens a grid of the symbols, drawn.
+/// (SwiftUI's `Menu` on macOS drops the images of its items, leaving bare names.)
+private struct GlyphPicker: View {
+    let current: IconGlyph
+    let select: (IconGlyph) -> Void
+    let importImage: () -> Void
+    @State private var isOpen = false
+
+    var body: some View {
+        Button { isOpen.toggle() } label: {
+            HStack(spacing: 6) {
+                current.image.frame(width: 18)
+                Text(current.title)
+                Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .popover(isPresented: $isOpen, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 10) {
+                GlyphGrid(current: current) { glyph in
+                    select(glyph)
+                    isOpen = false
+                }
+                Divider()
+                Button("Import Image…") {
+                    isOpen = false
+                    importImage()
+                }
+            }
+            .padding(12)
+        }
+    }
+}
+
+/// The symbols to choose from, each drawn with its name.
+struct GlyphGrid: View {
+    let current: IconGlyph
+    let select: (IconGlyph) -> Void
+
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(88), spacing: 8), count: 4), spacing: 8) {
+            ForEach(MenuBarIconStyle.symbols, id: \.self) { name in
+                let glyph = IconGlyph.symbol(name)
+                Button { select(glyph) } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: name).font(.system(size: 20)).frame(height: 24)
+                        Text(glyph.title)
+                            .font(.caption2)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(width: 88, height: 68)
+                    .background(glyph == current ? Color.accentColor.opacity(0.18) : .clear, in: .rect(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(glyph == current ? Color.accentColor : .clear, lineWidth: 1.5))
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(glyph.title)
+                .accessibilityAddTraits(glyph == current ? .isSelected : [])
+            }
+        }
+    }
+}
+
 private extension IconGlyph {
+    @ViewBuilder var image: some View {
+        switch self {
+        case .symbol(let name): Image(systemName: name)
+        case .custom: Image(systemName: "photo")
+        case .character(let text): Text(text)
+        }
+    }
+
     /// Readable names: `circle.dashed.inset.fill` tells people nothing.
     static let symbolTitles = [
         "circle": "Circle",
@@ -184,10 +234,7 @@ private extension IconGlyph {
         "circle.dotted": "Dotted circle",
         "circle.dashed": "Dashed circle",
         "circle.dashed.inset.fill": "Dashed circle, filled inside",
-        "circlebadge": "Badge",
-        "circlebadge.fill": "Filled badge",
         "circle.circle": "Circle in a circle",
-        "circle.circle.fill": "Filled circle in a circle",
         "circle.and.line.horizontal": "Circle on a line",
     ]
 
