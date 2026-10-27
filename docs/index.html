@@ -14,6 +14,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Registered so the ambient colors can cross-fade when the demo's status changes. */
+    @property --ambient-a { syntax: "<color>"; inherits: true; initial-value: rgba(48, 209, 88, 0.50); }
+    @property --ambient-b { syntax: "<color>"; inherits: true; initial-value: rgba(22, 150, 140, 0.38); }
+    @property --ambient-c { syntax: "<color>"; inherits: true; initial-value: rgba(38, 78, 140, 0.40); }
     :root {
       --graphite: #1E2125;
       --graphite-deep: #15171A;
@@ -46,6 +50,22 @@
     }
     a { color: var(--text); }
     a:hover { color: #FFFFFF; }
+
+    /* The ambient background: slow, soft color fields behind the glass, tinted by the
+       status the demo measures, so the translucency of Netty's design has something to show. */
+    body { --ambient-a: rgba(48, 209, 88, 0.50); --ambient-b: rgba(22, 150, 140, 0.38); --ambient-c: rgba(38, 78, 140, 0.40);
+      transition: --ambient-a 1.6s ease, --ambient-b 1.6s ease, --ambient-c 1.6s ease; }
+    body[data-status="degraded"] { --ambient-a: rgba(255, 196, 10, 0.42); --ambient-b: rgba(235, 120, 40, 0.34); --ambient-c: rgba(38, 78, 140, 0.34); }
+    body[data-status="offline"] { --ambient-a: rgba(255, 69, 58, 0.42); --ambient-b: rgba(170, 40, 70, 0.36); --ambient-c: rgba(38, 60, 110, 0.34); }
+    .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .ambient span { position: absolute; width: 75vmax; height: 75vmax; border-radius: 50%; will-change: transform; }
+    /* The first field sits behind the demo, so its glass has color to blur. */
+    .ambient span:nth-child(1) { width: 62vmax; height: 62vmax; left: 52%; top: -14vmax; background: radial-gradient(closest-side, var(--ambient-a), transparent); animation: drift-a 38s ease-in-out infinite alternate; }
+    .ambient span:nth-child(2) { left: -22vmax; top: 30%; background: radial-gradient(closest-side, var(--ambient-b), transparent); animation: drift-b 46s ease-in-out infinite alternate; }
+    .ambient span:nth-child(3) { right: -26vmax; bottom: -30vmax; background: radial-gradient(closest-side, var(--ambient-c), transparent); animation: drift-c 54s ease-in-out infinite alternate; }
+    @keyframes drift-a { to { transform: translate(-12vmax, 8vmax) scale(1.1); } }
+    @keyframes drift-b { to { transform: translate(22vmax, -10vmax) scale(0.9); } }
+    @keyframes drift-c { to { transform: translate(-16vmax, -18vmax) scale(1.08); } }
     :focus-visible { outline: 2px solid #0A84FF; outline-offset: 3px; border-radius: 6px; }
     img { max-width: 100%; height: auto; display: block; }
     .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
@@ -187,12 +207,15 @@
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
+      .ambient span { animation: none; }
+      body { transition: none; }
       .pulse span { animation: none; }
       .halo, .halo::after { transition: none; }
     }
   </style>
 </head>
-<body>
+<body data-status="online">
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="nav">
     <div class="wrap">
       <a class="brand" href="./"><img src="assets/favicon.png" alt="" width="30" height="30">Netty</a>
@@ -448,6 +471,8 @@
         const status = offline ? "offline" : degraded ? "degraded" : "online";
 
         demo.dataset.status = status;
+        // The page's ambient colors follow the measured status too.
+        document.body.dataset.status = status;
         el("demo-title").textContent = { online: "Online", degraded: "Degraded", offline: "Offline" }[status];
         const seconds = Math.round((Date.now() - opened) / 1000);
         el("demo-sub").textContent = offline ? "No answer from the internet" : `Measured over ${answered.length} check${answered.length === 1 ? "" : "s"}, ${seconds} s`;
