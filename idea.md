@@ -139,7 +139,7 @@ Two modes, chosen in Settings:
 | Mode | How the status shows |
 |---|---|
 | **Color** | One glyph, tinted green / yellow / red. |
-| **Monochrome** | A template image (adapts to light / dark menu bar), so color cannot carry the status: each status uses its **own glyph**. Defaults: Online `●`, Degraded `◍`, Offline `◌`. |
+| **Monochrome** | A template image (adapts to light / dark menu bar), so color cannot carry the status: each status uses its **own SF Symbol**, from `circle`, `circle.fill`, `circle.slash`, `circle.dotted`, `circle.dashed`, `circle.dashed.inset.fill`, `circlebadge`, `circlebadge.fill`, `circle.circle`, `circle.circle.fill`, `circle.and.line.horizontal`. Defaults: Online `circle.fill`, Degraded `circle.dashed.inset.fill`, Offline `circle.dotted`. No characters. |
 
 - **Glyph sets:** `○ ● ◯ ⬤ ◉ ◎ ◌ ◍` and SF Symbols equivalents. Glyphs are drawn into an `NSImage` with a fixed font so they look the same on every Mac, not inserted as menu bar text.
 - **Emoji (`🔘`):** always renders in its own colors, so it is offered in Color mode only and cannot be tinted.

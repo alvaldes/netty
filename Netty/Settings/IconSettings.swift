@@ -12,8 +12,6 @@ struct IconSettings: View {
     private static let statuses: [(String, ConnectionStatus)] = [
         ("Online", .online), ("Degraded", .degraded), ("Offline", .offline),
     ]
-    private static let symbols = ["circle.fill", "circle", "wifi", "network", "globe",
-                                  "antenna.radiowaves.left.and.right", "bolt.horizontal.circle"]
 
     var body: some View {
         HStack(alignment: .top, spacing: 20) {
@@ -107,28 +105,31 @@ struct IconSettings: View {
     }
 
     private func glyphMenu(for status: ConnectionStatus) -> some View {
-        let current = glyphs.wrappedValue[status]
-        let characters = MenuBarIconStyle.characters.filter {
-            // Emoji keep their own colors, so they cannot follow the menu bar.
-            settings.iconStyle.mode == .color || !IconGlyph.character($0).isEmoji
-        }
+        // What the icon draws, so a saved character shows as the symbol it falls back to.
+        let current = settings.iconStyle.appearance(for: status).glyph
         return Menu {
-            Section("Characters") {
-                ForEach(characters, id: \.self) { character in
-                    Button(character) { glyphs.wrappedValue[status] = .character(character) }
+            // Black & White uses SF Symbols only: their shapes stay crisp in the menu bar.
+            if settings.iconStyle.mode == .color {
+                Section("Characters") {
+                    ForEach(MenuBarIconStyle.characters, id: \.self) { character in
+                        Button(character) { glyphs.wrappedValue[status] = .character(character) }
+                    }
                 }
             }
             Section("Symbols") {
-                ForEach(Self.symbols, id: \.self) { name in
+                ForEach(MenuBarIconStyle.monochromeSymbols, id: \.self) { name in
                     Button { glyphs.wrappedValue[status] = .symbol(name) } label: {
-                        Label(name, systemImage: name)
+                        Label(IconGlyph.symbol(name).title, systemImage: name)
                     }
                 }
             }
             Divider()
             Button("Import Image…") { importImage(for: status) }
         } label: {
-            Text(current.title)
+            switch current {
+            case .symbol(let name): Label(current.title, systemImage: name)
+            default: Text(current.title)
+            }
         }
         .fixedSize()
     }
@@ -175,10 +176,25 @@ private extension ClickAction {
 }
 
 private extension IconGlyph {
+    /// Readable names: `circle.dashed.inset.fill` tells people nothing.
+    static let symbolTitles = [
+        "circle": "Circle",
+        "circle.fill": "Filled circle",
+        "circle.slash": "Circle with slash",
+        "circle.dotted": "Dotted circle",
+        "circle.dashed": "Dashed circle",
+        "circle.dashed.inset.fill": "Dashed circle, filled inside",
+        "circlebadge": "Badge",
+        "circlebadge.fill": "Filled badge",
+        "circle.circle": "Circle in a circle",
+        "circle.circle.fill": "Filled circle in a circle",
+        "circle.and.line.horizontal": "Circle on a line",
+    ]
+
     var title: String {
         switch self {
         case .character(let character): character
-        case .symbol(let name): name
+        case .symbol(let name): Self.symbolTitles[name] ?? name
         case .custom: "Custom image"
         }
     }

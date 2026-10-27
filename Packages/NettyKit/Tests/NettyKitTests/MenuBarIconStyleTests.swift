@@ -25,8 +25,8 @@ struct MenuBarIconStyleTests {
         let style = MenuBarIconStyle.defaults
         #expect(style.mode == .color)
         #expect(style.colorGlyphs == StatusGlyphs(all: .character("●")))
-        #expect(style.monochromeGlyphs == StatusGlyphs(online: .character("●"), degraded: .character("◍"),
-                                                       offline: .character("◌")))
+        #expect(style.monochromeGlyphs == StatusGlyphs(online: .symbol("circle.fill"), degraded: .symbol("circle.dashed.inset.fill"),
+                                                       offline: .symbol("circle.dotted")))
         #expect(style.size == 14)
     }
 
@@ -36,12 +36,34 @@ struct MenuBarIconStyleTests {
         #expect(appearance == IconAppearance(glyph: .character("●"), size: 14, isTemplate: false, tint: tint, opacity: 1))
     }
 
-    @Test(arguments: [(ConnectionStatus.online, "●"), (.degraded, "◍"), (.offline, "◌")])
-    func monochromeModeUsesOneTemplateGlyphPerStatus(status: ConnectionStatus, character: String) {
+    @Test(arguments: [(ConnectionStatus.online, "circle.fill"), (.degraded, "circle.dashed.inset.fill"), (.offline, "circle.dotted")])
+    func monochromeModeUsesOneTemplateSymbolPerStatus(status: ConnectionStatus, symbol: String) {
         var style = MenuBarIconStyle.defaults
         style.mode = .monochrome
         #expect(style.appearance(for: status)
-            == IconAppearance(glyph: .character(character), size: 14, isTemplate: true, tint: nil, opacity: 1))
+            == IconAppearance(glyph: .symbol(symbol), size: 14, isTemplate: true, tint: nil, opacity: 1))
+    }
+
+    @Test func monochromeSymbolsAreTheChosenEleven() {
+        #expect(MenuBarIconStyle.monochromeSymbols == [
+            "circle", "circle.fill", "circle.slash", "circle.dotted", "circle.dashed", "circle.dashed.inset.fill",
+            "circlebadge", "circlebadge.fill", "circle.circle", "circle.circle.fill", "circle.and.line.horizontal",
+        ])
+    }
+
+    @Test func charactersSavedForMonochromeFallBackToTheDefaultSymbol() {
+        // Black & white offers SF Symbols only; a character chosen before keeps working as the default.
+        var style = MenuBarIconStyle.defaults
+        style.mode = .monochrome
+        style.monochromeGlyphs.offline = .character("◌")
+        #expect(style.appearance(for: .offline).glyph == .symbol("circle.dotted"))
+    }
+
+    @Test func aChosenMonochromeSymbolIsUsed() {
+        var style = MenuBarIconStyle.defaults
+        style.mode = .monochrome
+        style.monochromeGlyphs.offline = .symbol("circle.slash")
+        #expect(style.appearance(for: .offline).glyph == .symbol("circle.slash"))
     }
 
     @Test func checkingShowsTheOnlineGlyphDimmed() {
@@ -68,7 +90,7 @@ struct MenuBarIconStyleTests {
         var style = MenuBarIconStyle.defaults
         style.mode = .monochrome
         style.monochromeGlyphs.degraded = .character("🔘")
-        #expect(style.appearance(for: .degraded).glyph == .character("◍"))
+        #expect(style.appearance(for: .degraded).glyph == .symbol("circle.dashed.inset.fill"))
     }
 
     @Test func customImagesAreNotTintedInColorModeAndTemplatesInMonochrome() {

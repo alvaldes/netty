@@ -24,6 +24,13 @@ enum SettingsSnapshot {
                 render(view, appearance: appearance, to: output.appending(path: "\(area.rawValue)-\(name).png"))
             }
         }
+        settings.iconStyle.mode = .monochrome
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            let view = SettingsView(settings: settings, launchAtLogin: LaunchAtLogin(),
+                                    location: LocationPermission(), notifications: NotificationPermission(),
+                                    previewModel: { PopoverSnapshot.samples[0].1 }, area: .icon)
+            render(view, appearance: appearance, to: output.appending(path: "icon-monochrome-\(name).png"))
+        }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             let view = OnboardingView(settings: settings, location: LocationPermission(),
                                       notifications: NotificationPermission(), requestNotifications: {})

@@ -79,12 +79,18 @@ nonisolated public struct MenuBarIconStyle: Sendable, Equatable, Codable {
     public enum Mode: String, Sendable, Codable, CaseIterable {
         /// One glyph tinted green, yellow or red.
         case color
-        /// Black and white, matching the menu bar: the glyph's shape carries the status.
+        /// Black and white, matching the menu bar: the symbol's shape carries the status.
         case monochrome
     }
 
     public static let sizeRange = 10.0...18.0
+    /// Offered in Color mode.
     public static let characters = ["○", "●", "◯", "⬤", "◉", "◎", "◌", "◍", "🔘"]
+    /// The SF Symbols offered, and in Black & White the only glyphs besides imported images.
+    public static let monochromeSymbols = [
+        "circle", "circle.fill", "circle.slash", "circle.dotted", "circle.dashed", "circle.dashed.inset.fill",
+        "circlebadge", "circlebadge.fill", "circle.circle", "circle.circle.fill", "circle.and.line.horizontal",
+    ]
 
     public var mode = Mode.color
     /// Used in Color mode.
@@ -98,8 +104,9 @@ nonisolated public struct MenuBarIconStyle: Sendable, Equatable, Codable {
 
     public static let defaults = MenuBarIconStyle()
 
+    /// The SF Symbol counterparts of ● ◍ ◌: full, partly filled, dotted.
     static let defaultMonochromeGlyphs = StatusGlyphs(
-        online: .character("●"), degraded: .character("◍"), offline: .character("◌"))
+        online: .symbol("circle.fill"), degraded: .symbol("circle.dashed.inset.fill"), offline: .symbol("circle.dotted"))
 
     public func appearance(for status: ConnectionStatus?) -> IconAppearance {
         let size = min(max(size, Self.sizeRange.lowerBound), Self.sizeRange.upperBound)
@@ -113,7 +120,8 @@ nonisolated public struct MenuBarIconStyle: Sendable, Equatable, Codable {
                                   tint: isTintable ? status.tint : nil, opacity: opacity)
         case .monochrome:
             var glyph = monochromeGlyphs[status]
-            if glyph.isEmoji { glyph = Self.defaultMonochromeGlyphs[status] }
+            // SF Symbols and imported images only; a character saved by an earlier version uses the default.
+            if case .character = glyph { glyph = Self.defaultMonochromeGlyphs[status] }
             return IconAppearance(glyph: glyph, size: size, isTemplate: true, tint: nil, opacity: opacity)
         }
     }

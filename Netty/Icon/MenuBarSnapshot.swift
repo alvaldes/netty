@@ -24,8 +24,8 @@ enum MenuBarSnapshot {
         let output = URL(fileURLWithPath: directory, isDirectory: true)
         try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
         let store = CustomIconStore(folder: output.appending(path: "icons", directoryHint: .isDirectory))
-        var glyphs: [IconGlyph] = [.character("●"), .character("◍"), .character("◌"), .character("◉"),
-                                   .symbol("wifi"), .character("🔘")]
+        var glyphs: [IconGlyph] = [.character("●"), .character("◍"), .character("◌"), .character("🔘")]
+            + MenuBarIconStyle.monochromeSymbols.map(IconGlyph.symbol)
         if let path = ProcessInfo.processInfo.environment["NETTY_ICON_CUSTOM"],
            let fileName = try? store.importImage(from: URL(fileURLWithPath: path)) {
             glyphs.append(.custom(fileName: fileName))
