@@ -7,10 +7,15 @@ struct NettyApp: App {
     @State private var speedTester: SpeedTester
     @State private var location: LocationPermission
     @State private var notifier: ConnectionNotifier
+    // Persisted with the other settings in T9.
+    @State private var iconStyle = MenuBarIconStyle.defaults
 
     init() {
         #if DEBUG
         PopoverSnapshot.renderIfRequested()
+        if let style = MenuBarSnapshot.requestedStyle { _iconStyle = State(initialValue: style) }
+        MenuBarSnapshot.renderGlyphsIfRequested()
+        MenuBarSnapshot.captureIfRequested()
         #endif
         let monitor = ConnectionMonitor()
         let speedTester = SpeedTester(conditions: {
@@ -46,20 +51,8 @@ struct NettyApp: App {
                 )
             )
         } label: {
-            // Placeholder until the configurable icon (T8).
-            Image(systemName: monitor.status.symbolName)
+            Image(nsImage: MenuBarIconRenderer.image(for: iconStyle.appearance(for: monitor.status)))
         }
         .menuBarExtraStyle(.window)
-    }
-}
-
-private extension ConnectionStatus? {
-    var symbolName: String {
-        switch self {
-        case .online: "circle.fill"
-        case .degraded: "circle.lefthalf.filled"
-        case .offline: "circle.dotted"
-        case nil: "circle"
-        }
     }
 }
