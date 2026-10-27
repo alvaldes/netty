@@ -59,9 +59,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private func updateIcon() {
         withObservationTracking {
             statusItem.button?.image = MenuBarIconRenderer.image(for: settings.iconStyle.appearance(for: monitor.status))
-        } onChange: {
+        } onChange: { [weak self] in
             // Called before the change lands: redraw on the next turn.
-            Task { @MainActor [weak self] in self?.updateIcon() }
+            Task { @MainActor in self?.updateIcon() }
         }
     }
 
