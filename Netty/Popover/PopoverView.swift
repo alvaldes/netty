@@ -8,7 +8,7 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            StatusHeader(model: model)
+            StatusHeader(model: model, openSettings: actions.openSettings)
             MetricsRow(model: model)
             SpeedCard(model: model, runSpeedTest: actions.runSpeedTest)
             NetworkRow(model: model, requestWiFiName: actions.requestWiFiName)
@@ -73,6 +73,7 @@ private struct WindowReader: NSViewRepresentable {
 
 private struct StatusHeader: View {
     let model: PopoverModel
+    let openSettings: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -96,8 +97,18 @@ private struct StatusHeader: View {
                 }
             }
             Spacer(minLength: 0)
+            Button(action: openSettings) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 30)
+                    .card(radius: Brand.buttonRadius)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(",")
+            .help("Settings")
+            .accessibilityLabel("Settings")
         }
-        .accessibilityElement(children: .combine)
     }
 
     private func subtitle(now: Date) -> String {

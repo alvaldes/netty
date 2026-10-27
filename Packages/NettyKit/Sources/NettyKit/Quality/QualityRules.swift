@@ -42,6 +42,21 @@ nonisolated public struct QualityRules: Sendable, Equatable, Codable {
     public init() {}
 
     public static let defaults = QualityRules()
+
+    /// Every value within the range the evaluator works with. A count of zero
+    /// would break it: "0 failures to go offline" turns every probe, even a
+    /// successful one, into an outage.
+    public var validated: QualityRules {
+        var rules = self
+        rules.windowSize = max(1, windowSize)
+        rules.latencyThreshold = max(1, latencyThreshold)
+        rules.jitterThreshold = max(1, jitterThreshold)
+        rules.lossThreshold = min(max(0.01, lossThreshold), 1)
+        rules.failuresToOffline = max(1, failuresToOffline)
+        rules.successesToOnline = max(1, successesToOnline)
+        rules.evaluationsToRecover = max(1, evaluationsToRecover)
+        return rules
+    }
 }
 
 /// Connection quality over the current window.

@@ -25,6 +25,7 @@ struct PopoverActions {
     var opened: () -> Void = {}
     var runSpeedTest: () -> Void = {}
     var requestWiFiName: () -> Void = {}
+    var openSettings: () -> Void = {}
     var quit: () -> Void = {}
 }
 
