@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The areas of the Settings window, in sidebar order.
 enum SettingsArea: String, CaseIterable, Identifiable {
-    case about, general, popover, icon, connection, speedTest, notifications, permissions
+    case general, popover, icon, connection, speedTest, notifications, permissions
 
     var id: Self { self }
 
@@ -16,7 +16,6 @@ enum SettingsArea: String, CaseIterable, Identifiable {
         case .speedTest: "Speed Test"
         case .notifications: "Notifications"
         case .permissions: "Permissions"
-        case .about: "About"
         }
     }
 
@@ -29,7 +28,6 @@ enum SettingsArea: String, CaseIterable, Identifiable {
         case .speedTest: "speedometer"
         case .notifications: "bell.badge"
         case .permissions: "lock.shield"
-        case .about: "info.circle"
         }
     }
 }
@@ -42,8 +40,8 @@ struct SettingsView: View {
     let notifications: NotificationPermission
     let previewModel: () -> PopoverModel
 
-    /// Every opening starts on About, as in JUMP.
-    @State var area: SettingsArea = .about
+    /// Every opening starts on General, which also holds About.
+    @State var area: SettingsArea = .general
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -65,7 +63,7 @@ struct SettingsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .background(WindowChrome(title: "Netty"))
         .task { await notifications.refresh() }
-        .onDisappear { area = .about }
+        .onDisappear { area = .general }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Back from System Settings.
             launchAtLogin.refresh()
@@ -83,7 +81,6 @@ struct SettingsView: View {
         case .speedTest: SpeedTestSettings(settings: settings)
         case .notifications: NotificationSettings(settings: settings, permission: notifications)
         case .permissions: PermissionsSettings(location: location, notifications: notifications)
-        case .about: AboutSettings()
         }
     }
 }
