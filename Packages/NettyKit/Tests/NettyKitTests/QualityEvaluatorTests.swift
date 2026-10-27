@@ -23,7 +23,7 @@ struct QualityRulesTests {
         #expect(rules.windowSize == 6)
         #expect(rules.latencyThreshold == 150)
         #expect(rules.jitterThreshold == 50)
-        #expect(rules.lossThreshold == 0.10)
+        #expect(rules.lossThreshold == 0.20)
         #expect(rules.failuresToOffline == 3)
         #expect(rules.successesToOnline == 2)
         #expect(rules.evaluationsToRecover == 2)
@@ -139,11 +139,29 @@ struct QualityEvaluatorTests {
         #expect(sut.status == .degraded)
     }
 
-    @Test func lossAtTheThresholdIsDegraded() {
+    @Test func oneLostProbeInTheWindowStaysOnline() {
         var sut = evaluator()
         sut.recordReachable([20, 20, 20, 20, 20])
         sut.record(.unreachable)
         #expect(sut.metrics.loss == 1.0 / 6.0)
+        #expect(sut.status == .online)
+    }
+
+    @Test func twoLostProbesInTheWindowAreDegraded() {
+        var sut = evaluator()
+        sut.recordReachable([20, 20, 20])
+        sut.record([.unreachable, .reachable(latency: 20), .unreachable])
+        #expect(sut.metrics.loss == 2.0 / 6.0)
+        #expect(sut.status == .degraded)
+    }
+
+    @Test func lossAtTheThresholdIsDegraded() {
+        var rules = QualityRules.defaults
+        rules.windowSize = 5
+        var sut = evaluator(rules)
+        sut.recordReachable([20, 20, 20, 20])
+        sut.record(.unreachable)
+        #expect(sut.metrics.loss == 0.2)
         #expect(sut.status == .degraded)
     }
 

@@ -108,7 +108,7 @@ Metrics use a sliding window of the last *N* samples (default 6, i.e. one minute
 | Status | Rule (defaults) |
 |---|---|
 | Red | `NWPath` is unsatisfied (immediate), **or** *3* consecutive failed reachability probes. |
-| Yellow | Online, and median latency ≥ *150 ms* **or** jitter ≥ *50 ms* **or** loss ≥ *10 %*. |
+| Yellow | Online, and median latency ≥ *150 ms* **or** jitter ≥ *50 ms* **or** loss ≥ *20 %*. |
 | Green | Online and none of the Yellow conditions. |
 
 Hysteresis to avoid a flickering LED:

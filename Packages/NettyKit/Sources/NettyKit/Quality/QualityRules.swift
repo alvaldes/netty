@@ -31,7 +31,7 @@ nonisolated public struct QualityRules: Sendable, Equatable, Codable {
     /// Jitter, in milliseconds, at or above which the connection is degraded.
     public var jitterThreshold = 50.0
     /// Share of failed probes in the window (0...1) at or above which the connection is degraded.
-    public var lossThreshold = 0.10
+    public var lossThreshold = 0.20
     /// Consecutive failed probes before going offline.
     public var failuresToOffline = 3
     /// Consecutive successful probes before coming back online.
