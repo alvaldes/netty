@@ -15,7 +15,7 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 - **Latency, jitter and loss** from a TCP handshake with 1.1.1.1 and 8.8.8.8 every 10 seconds, and right away whenever you open the popover or the network changes.
 - **Speed test** with Apple's built-in `networkQuality`: download, upload and responsiveness. It runs when you ask, or on a schedule (off by default; metered networks are skipped).
 - **Notifications** when the connection drops and when it comes back, with how long you were offline. A degraded connection never notifies, and Focus modes are respected.
-- **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, and whether a VPN carries your traffic.
+- **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, whether a VPN carries your traffic, and your local and public IP (click one to copy it).
 - **Your popover, your order:** show, hide and drag its sections (Status, Quality, Speed, Network) in Settings › Popover, with a live preview.
 - **Left and right click:** each opens the popover, a quick menu (Settings, Quit), a speed test or Settings, as you choose.
 - **Menu bar icon your way:** color or black & white, a glyph per status (`● ◍ ◌ ◉ …`, SF Symbols or your own SVG, PDF or PNG) and its size.
@@ -39,7 +39,7 @@ Both are optional; each only adds something to the popover.
 - **Notifications:** connection lost / back online.
 - **Location:** macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location.
 
-Netty sends nothing anywhere: no analytics, no telemetry, no public IP lookup.
+Netty sends nothing anywhere: no analytics, no telemetry. Its checks go to Apple's captive portal page, Google's fallback, and Cloudflare's 1.1.1.1. The public IP comes from that same 1.1.1.1 (`/cdn-cgi/trace`, over HTTPS), only when you open the popover and at most every 5 minutes; turn it off in Settings › Connection.
 
 ## Build from source
 

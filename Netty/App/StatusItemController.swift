@@ -12,18 +12,22 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let settings: NettySettings
     private let monitor: ConnectionMonitor
     private let speedTester: SpeedTester
+    private let publicAddress: PublicAddress
     /// When the popover last closed: a click on the icon closes a transient
     /// popover on mouse-down, before the action runs on mouse-up.
     private var popoverClosedAt = Date.distantPast
 
-    init(settings: NettySettings, monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission) {
+    init(settings: NettySettings, monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission,
+         publicAddress: PublicAddress) {
         self.settings = settings
+        self.publicAddress = publicAddress
         self.monitor = monitor
         self.speedTester = speedTester
         super.init()
 
         let opener = settingsOpener
         let content = PopoverContainer(settings: settings, monitor: monitor, speedTester: speedTester, location: location,
+                                       publicAddress: publicAddress,
                                        openSettings: { [weak self] in
                                            self?.popover.close()
                                            opener.open()
@@ -124,6 +128,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// Opening the popover is the re-check: it shows fresh numbers.
     func popoverWillShow(_ notification: Notification) {
         Task { await monitor.recheck() }
+        Task { [monitor, publicAddress] in await publicAddress.refreshIfStale(path: monitor.path) }
     }
 
     func popoverDidClose(_ notification: Notification) {
@@ -162,12 +167,13 @@ private struct PopoverContainer: View {
     let monitor: ConnectionMonitor
     let speedTester: SpeedTester
     let location: LocationPermission
+    let publicAddress: PublicAddress
     let openSettings: () -> Void
 
     var body: some View {
         PopoverView(
             model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
-                                layout: settings.popoverLayout),
+                                publicAddress: publicAddress, layout: settings.popoverLayout),
             actions: PopoverActions(
                 runSpeedTest: { Task { await speedTester.run() } },
                 requestWiFiName: { location.request() },
@@ -189,6 +195,7 @@ extension StatusItemController {
             perform(.showPopover)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [self] in
                 print("CHECK popover shown:", isPopoverVisible)
+                print("CHECK local address:", monitor.localAddress != nil, "public address:", publicAddress.address != nil)
                 if let view = popover.contentViewController?.view,
                    let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
                     view.cacheDisplay(in: view.bounds, to: bitmap)

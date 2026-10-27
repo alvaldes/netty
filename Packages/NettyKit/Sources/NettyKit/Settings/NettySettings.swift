@@ -58,6 +58,14 @@ public final class NettySettings {
         }
     }
 
+    /// Looks up the public IP at Cloudflare (1.1.1.1) when the popover shows it.
+    public var showsPublicIP: Bool {
+        didSet {
+            defaults.set(showsPublicIP, forKey: Key.showsPublicIP)
+            onChange?()
+        }
+    }
+
     public var iconStyle: MenuBarIconStyle {
         didSet { store(iconStyle, forKey: Key.iconStyle) }
     }
@@ -92,6 +100,7 @@ public final class NettySettings {
         static let notifiesWhenOffline = "notifiesWhenOffline"
         static let notifiesWhenBackOnline = "notifiesWhenBackOnline"
         static let iconStyle = "iconStyle"
+        static let showsPublicIP = "showsPublicIP"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let clickBehavior = "clickBehavior"
         static let popoverLayout = "popoverLayout"
@@ -106,6 +115,7 @@ public final class NettySettings {
         skipsMeteredNetworks = defaults.object(forKey: Key.skipsMeteredNetworks) as? Bool ?? true
         notifiesWhenOffline = defaults.object(forKey: Key.notifiesWhenOffline) as? Bool ?? true
         notifiesWhenBackOnline = defaults.object(forKey: Key.notifiesWhenBackOnline) as? Bool ?? true
+        showsPublicIP = defaults.object(forKey: Key.showsPublicIP) as? Bool ?? true
         iconStyle = Self.decoded(MenuBarIconStyle.self, forKey: Key.iconStyle, in: defaults) ?? .defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
         popoverLayout = Self.decoded(PopoverLayout.self, forKey: Key.popoverLayout, in: defaults)?.normalized ?? .defaults

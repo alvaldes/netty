@@ -9,19 +9,23 @@ nonisolated public struct ConnectionClient: Sendable {
     public var now: @Sendable () -> Date
     /// The Wi-Fi network name; `nil` without Location access.
     public var wifiName: @Sendable () -> String?
+    /// The Mac's IPv4 address on an interface.
+    public var localAddress: @Sendable (String) -> String?
 
     public init(
         probe: @escaping @Sendable () async -> ProbeSample,
         paths: @escaping @Sendable () -> AsyncStream<NetworkPath>,
         sleep: @escaping @Sendable (Duration) async throws -> Void,
         now: @escaping @Sendable () -> Date,
-        wifiName: @escaping @Sendable () -> String?
+        wifiName: @escaping @Sendable () -> String?,
+        localAddress: @escaping @Sendable (String) -> String? = { _ in nil }
     ) {
         self.probe = probe
         self.paths = paths
         self.sleep = sleep
         self.now = now
         self.wifiName = wifiName
+        self.localAddress = localAddress
     }
 
     public static let live = ConnectionClient(
@@ -33,7 +37,8 @@ nonisolated public struct ConnectionClient: Sendable {
         paths: { NetworkPath.updates() },
         sleep: { try await Task.sleep(for: $0) },
         now: { Date() },
-        wifiName: { WiFiNetwork.currentName() }
+        wifiName: { WiFiNetwork.currentName() },
+        localAddress: { LocalAddress.ipv4(of: $0) }
     )
 }
 
@@ -46,6 +51,8 @@ public final class ConnectionMonitor {
     public private(set) var path: NetworkPath?
     /// The Wi-Fi network name, when on Wi-Fi and Location access is granted.
     public private(set) var wifiName: String?
+    /// The Mac's address on the network in use.
+    public private(set) var localAddress: String?
     /// When the current status started.
     public private(set) var statusSince: Date?
     public var probeInterval: Duration
@@ -106,6 +113,7 @@ public final class ConnectionMonitor {
     /// Re-reads the Wi-Fi name, e.g. after Location access changes.
     public func refreshNetworkInfo() {
         wifiName = path.map { $0.isSatisfied && $0.interface == .wifi } == true ? client.wifiName() : nil
+        localAddress = path?.interfaceName.flatMap(client.localAddress)
     }
 
     private func publish() {

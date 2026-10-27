@@ -27,7 +27,9 @@ enum PopoverSnapshot {
         let wifi = NetworkPath(isSatisfied: true, interface: .wifi, isExpensive: false, isConstrained: false)
         let online = PopoverModel(status: .online, statusSince: .now.addingTimeInterval(-8_040),
                                   metrics: QualityMetrics(latency: 24, jitter: 3, loss: 0),
-                                  lastSpeed: speed, path: wifi, wifiName: "Home")
+                                  lastSpeed: speed, path: wifi, wifiName: "Home",
+                                  // Documentation addresses (RFC 1918 and RFC 5737).
+                                  localAddress: "192.168.0.103", publicAddress: "203.0.113.7")
         var degraded = online
         degraded.status = .degraded
         degraded.statusSince = .now.addingTimeInterval(-180)

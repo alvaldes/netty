@@ -242,6 +242,23 @@ private struct NetworkRow: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            interfaceLine
+            if model.localAddress != nil || (model.showsPublicIP && model.isOnline) {
+                HStack(spacing: 16) {
+                    if let local = model.localAddress {
+                        AddressLabel(title: "Local IP", address: local)
+                    }
+                    if model.showsPublicIP && model.isOnline {
+                        AddressLabel(title: "Public IP", address: model.publicAddress)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    private var interfaceLine: some View {
         HStack(spacing: 8) {
             Image(systemName: symbol)
                 .font(.system(size: 13))
@@ -283,6 +300,42 @@ private struct NetworkRow: View {
         case .other: "Other network"
         case .some(.none), nil: "No network"
         }
+    }
+}
+
+/// An address that copies itself on click.
+private struct AddressLabel: View {
+    let title: String
+    let address: String?
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            guard let address else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(address, forType: .string)
+            copied = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.2))
+                copied = false
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(copied ? "Copied" : title)
+                    .font(.system(size: 11))
+                    .foregroundStyle(copied ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+                Text(address ?? "…")
+                    .font(.system(size: 12, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .disabled(address == nil)
+        .help(address == nil ? "" : "Click to copy")
+        .accessibilityLabel("\(title) \(address ?? "unknown")")
+        .accessibilityHint("Copies the address")
     }
 }
 

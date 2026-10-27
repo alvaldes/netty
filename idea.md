@@ -62,7 +62,6 @@ These terms have one meaning everywhere in the app and in the code.
 ### Out of scope
 
 - **Mac App Store.** Distribution is Developer ID + notarization, GitHub Releases and a Homebrew cask, as JUMP. No sandbox required.
-- **Public IP.** Showing it needs a third-party service; not worth the privacy cost.
 - **Disconnection history.** No persisted event log.
 - Analytics or telemetry of any kind.
 
@@ -129,6 +128,8 @@ Every value in *italics* is a setting, with "Reset to defaults".
 ### 4.5 Network info
 
 - **SSID:** `CWWiFiClient` returns the name only with Location Services authorized. Ask once during onboarding, explain why, degrade gracefully.
+- **Local IP:** the IPv4 address of the interface carrying the traffic, read with `getifaddrs`; nothing leaves the Mac.
+- **Public IP:** `https://1.1.1.1/cdn-cgi/trace`, the host the latency probe already uses, so no new party; HTTPS to an IP literal, so no DNS lookup. Measured at 70–360 ms and 191 bytes. Looked up when the popover opens, on a new network or after 5 minutes; can be turned off.
 - **VPN:** heuristic — an active `utun`/`ipsec`/`ppp` interface carrying the default route. Shown as "VPN on" without naming the provider.
 
 ### 4.6 Menu bar icon

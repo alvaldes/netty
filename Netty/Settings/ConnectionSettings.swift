@@ -54,6 +54,16 @@ struct ConnectionSettings: View {
                         value: count(\.evaluationsToRecover), range: 1...10, step: 1, unit: "clean checks")
             }
 
+            SettingsCard(title: "Public IP", symbol: "globe",
+                         subtitle: "Your public IP is the address websites see. Netty asks Cloudflare's 1.1.1.1, the same host it already measures latency against, over HTTPS: no new party learns anything.") {
+                SettingRow(title: "Show public IP",
+                           detail: "Looked up when you open the popover, on a new network or every 5 minutes at most. Off: never looked up.") {
+                    Toggle("Show public IP", isOn: $settings.showsPublicIP)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                }
+            }
+
             HStack {
                 Spacer()
                 Button("Reset to Defaults") { settings.resetQualityRules() }

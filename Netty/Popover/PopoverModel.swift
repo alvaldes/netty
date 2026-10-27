@@ -15,6 +15,11 @@ struct PopoverModel {
     var wifiName: String?
     /// Wi-Fi is up but its name is hidden until Location access is granted.
     var canRequestWiFiName = false
+    /// The Mac's address on the network in use.
+    var localAddress: String?
+    /// The public IP; `nil` while unknown.
+    var publicAddress: String?
+    var showsPublicIP = true
     /// Which sections show, in which order.
     var layout = PopoverLayout.defaults
 
@@ -30,7 +35,8 @@ struct PopoverActions {
 }
 
 extension PopoverModel {
-    init(monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission, layout: PopoverLayout) {
+    init(monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission,
+         publicAddress: PublicAddress, layout: PopoverLayout) {
         self.init(
             status: monitor.status,
             statusSince: monitor.statusSince,
@@ -42,6 +48,9 @@ extension PopoverModel {
             path: monitor.path,
             wifiName: monitor.wifiName,
             canRequestWiFiName: monitor.path?.interface == .wifi && location.status != .granted,
+            localAddress: monitor.localAddress,
+            publicAddress: publicAddress.address,
+            showsPublicIP: publicAddress.isEnabled,
             layout: layout
         )
     }

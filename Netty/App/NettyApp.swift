@@ -9,6 +9,7 @@ struct NettyApp: App {
     @State private var speedTester: SpeedTester
     @State private var location: LocationPermission
     @State private var notifier: ConnectionNotifier
+    @State private var publicAddress: PublicAddress
     @State private var launchAtLogin = LaunchAtLogin()
     @State private var notificationPermission = NotificationPermission()
     private let statusItem = StatusItemHolder()
@@ -39,6 +40,7 @@ struct NettyApp: App {
         let location = LocationPermission()
         location.onChange = { _ in monitor.refreshNetworkInfo() }
         let notifier = ConnectionNotifier()
+        let publicAddress = PublicAddress()
         monitor.onStatusChange = { old, new, date in notifier.statusChanged(from: old, to: new, at: date) }
 
         func apply() {
@@ -48,6 +50,7 @@ struct NettyApp: App {
             speedTester.skipsMeteredNetworks = settings.skipsMeteredNetworks
             notifier.notifiesWhenOffline = settings.notifiesWhenOffline
             notifier.notifiesWhenBackOnline = settings.notifiesWhenBackOnline
+            publicAddress.isEnabled = settings.showsPublicIP
         }
         apply()
         settings.onChange = apply
@@ -57,11 +60,13 @@ struct NettyApp: App {
         _speedTester = State(initialValue: speedTester)
         _location = State(initialValue: location)
         _notifier = State(initialValue: notifier)
+        _publicAddress = State(initialValue: publicAddress)
         // The status bar takes items once the app has finished launching.
         let holder = statusItem
         DispatchQueue.main.async {
             holder.controller = StatusItemController(settings: settings, monitor: monitor,
-                                                     speedTester: speedTester, location: location)
+                                                     speedTester: speedTester, location: location,
+                                                     publicAddress: publicAddress)
             #if DEBUG
             holder.controller?.checkClicksIfRequested()
             #endif
@@ -88,9 +93,9 @@ struct NettyApp: App {
         Settings {
             SettingsView(settings: settings, launchAtLogin: launchAtLogin, location: location,
                          notifications: notificationPermission,
-                         previewModel: { [monitor, speedTester, location, settings] in
+                         previewModel: { [monitor, speedTester, location, publicAddress, settings] in
                              PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
-                                          layout: settings.popoverLayout)
+                                          publicAddress: publicAddress, layout: settings.popoverLayout)
                          })
         }
     }

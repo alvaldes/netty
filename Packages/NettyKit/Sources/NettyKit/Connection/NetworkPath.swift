@@ -16,13 +16,17 @@ nonisolated public struct NetworkPath: Sendable, Equatable {
     /// A VPN tunnel carries the traffic (heuristic: the preferred interface is a tunnel).
     /// Split-tunnel VPNs that leave the default route alone are not detected.
     public var isVPN: Bool
+    /// The BSD name of the interface carrying the traffic, such as `en0`.
+    public var interfaceName: String?
 
-    public init(isSatisfied: Bool, interface: Interface, isExpensive: Bool, isConstrained: Bool, isVPN: Bool = false) {
+    public init(isSatisfied: Bool, interface: Interface, isExpensive: Bool, isConstrained: Bool, isVPN: Bool = false,
+                interfaceName: String? = nil) {
         self.isSatisfied = isSatisfied
         self.interface = interface
         self.isExpensive = isExpensive
         self.isConstrained = isConstrained
         self.isVPN = isVPN
+        self.interfaceName = interfaceName
     }
 
     static func isTunnel(interfaceName name: String) -> Bool {
@@ -47,6 +51,7 @@ nonisolated public struct NetworkPath: Sendable, Equatable {
         isExpensive = path.isExpensive
         isConstrained = path.isConstrained
         isVPN = path.status == .satisfied && path.availableInterfaces.first.map { Self.isTunnel(interfaceName: $0.name) } == true
+        interfaceName = path.status == .satisfied ? path.availableInterfaces.first?.name : nil
     }
 
     /// Every path change for as long as the stream is iterated.
