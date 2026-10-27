@@ -4,11 +4,11 @@
 
 Your network companion in the macOS menu bar. A dot that tells you at a glance whether you are really on the internet, how good the connection is, and how fast it is.
 
-> Status: v0.1.0 (not yet notarized). See [`idea.md`](idea.md) for the design spec.
+> Status: v1.0.0 (not yet notarized). See [`idea.md`](idea.md) for the design spec.
 
 | Online | Degraded |
 |---|---|
-| ![Popover, online: latency, jitter, loss, last speed test and network](docs/assets/screenshots/popover-online-dark.png) | ![Popover, degraded by high latency while a speed test runs](docs/assets/screenshots/popover-degraded-light.png) |
+| ![Popover, online: latency, jitter, loss, last speed test and network](docs/assets/screenshots/popover-online-dark.png) | ![Popover, degraded by high latency while a speed test runs](docs/assets/screenshots/popover-degraded-dark.png) |
 
 ## Features
 

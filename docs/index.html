@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Netty: know when your internet drops</title>
+  <meta name="description" content="A dot in your Mac's menu bar: green when you're online, yellow when the connection is poor, red when there's no internet. Free and open source.">
+  <meta property="og:title" content="Netty">
+  <meta property="og:description" content="Know when your internet drops, from your Mac's menu bar.">
+  <meta property="og:image" content="https://alvaldes.github.io/netty/assets/icon-512.png">
+  <meta name="theme-color" content="#1E2125">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --graphite: #1E2125;
+      --graphite-deep: #15171A;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-strong: rgba(255, 255, 255, 0.09);
+      --hairline: rgba(255, 255, 255, 0.10);
+      --text: #EDEEF0;
+      --text-2: #9A9FA6;
+      --green: #30D158;
+      --yellow: #FFD60A;
+      --red: #FF453A;
+      --status: var(--green);
+      --radius-card: 22px;
+      --radius-tile: 14px;
+      --max: 1120px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1100px 700px at 78% -10%, #2A2E34 0%, rgba(42, 46, 52, 0) 70%),
+        linear-gradient(180deg, var(--graphite) 0%, var(--graphite-deep) 100%);
+      background-color: var(--graphite-deep);
+      color: var(--text);
+      font: 400 17px/1.55 var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--text); }
+    a:hover { color: #FFFFFF; }
+    :focus-visible { outline: 2px solid #0A84FF; outline-offset: 3px; border-radius: 6px; }
+    img { max-width: 100%; height: auto; display: block; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--hairline);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+    }
+
+    /* Navigation */
+    .nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); background: rgba(21, 23, 26, 0.65); border-bottom: 1px solid var(--hairline); }
+    .nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; font-size: 17px; }
+    .brand img { width: 30px; height: 30px; }
+    .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 15px; }
+    .nav-links a { color: var(--text-2); text-decoration: none; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.button-primary, .nav-links a.button-primary:hover { color: var(--graphite-deep); }
+
+    /* Buttons */
+    .button { display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 0 22px; border-radius: 999px; font-weight: 600; font-size: 16px; text-decoration: none; }
+    .button-primary { background: var(--text); color: var(--graphite-deep); }
+    .button-primary:hover { background: #FFFFFF; color: var(--graphite-deep); }
+    .button-secondary { color: var(--text); }
+    .button-small { min-height: 34px; padding: 0 16px; font-size: 14px; }
+    .button svg { width: 17px; height: 17px; }
+
+    /* Hero */
+    /* The rings spread wider than a phone: keep them inside the hero. */
+    .hero { padding: 88px 0 72px; overflow: clip; }
+    .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 56px; align-items: center; }
+    h1, h2, h3 { font-family: var(--font-display); margin: 0; }
+    h1 { font-size: clamp(44px, 6.4vw, 78px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+    .lede { margin: 24px 0 0; font-size: 20px; color: var(--text-2); max-width: 30em; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .fine { margin: 16px 0 0; font-size: 14px; color: var(--text-2); }
+
+    /* Live popover demo */
+    .demo { position: relative; justify-self: center; width: min(100%, 360px); }
+    .pulse { position: absolute; left: 50%; top: 46%; width: 0; height: 0; pointer-events: none; }
+    /* Rings start just outside the popover, so they spread behind it, never across it. */
+    .pulse span { position: absolute; left: 0; top: 0; width: 420px; height: 420px; margin: -210px 0 0 -210px; border-radius: 50%; border: 1px solid var(--status); opacity: 0; animation: pulse 4.5s ease-out infinite; }
+    .pulse span:nth-child(2) { animation-delay: 1.5s; }
+    .pulse span:nth-child(3) { animation-delay: 3s; }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.32; } 100% { transform: scale(1.9); opacity: 0; } }
+    .popover { position: relative; border-radius: var(--radius-card); padding: 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); background: rgba(44, 47, 52, 0.62); }
+    .status { display: flex; align-items: center; gap: 14px; }
+    .halo { position: relative; width: 44px; height: 44px; border-radius: 50%; background: color-mix(in srgb, var(--status) 18%, transparent); flex: none; transition: background 0.4s; }
+    .halo::after { content: ""; position: absolute; inset: 14px; border-radius: 50%; background: var(--status); box-shadow: 0 0 12px var(--status); transition: background 0.4s, box-shadow 0.4s; }
+    .status-title { font: 600 24px/1.15 var(--font-display); letter-spacing: -0.01em; }
+    .status-sub { font-size: 13px; color: var(--text-2); }
+    .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .tile { border-radius: var(--radius-tile); padding: 10px 12px; background: var(--glass); border: 1px solid var(--hairline); }
+    .tile small { display: block; font-size: 12px; color: var(--text-2); }
+    .tile strong { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .demo-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--text-2); }
+    .demo-row svg { width: 15px; height: 15px; flex: none; }
+    .demo-note { margin: 18px 4px 0; font-size: 13px; color: var(--text-2); text-align: center; }
+
+    /* Sections */
+    section { padding: 72px 0; }
+    h2 { font-size: clamp(32px, 4vw, 46px); line-height: 1.08; letter-spacing: -0.025em; font-weight: 700; max-width: 18em; }
+    .section-lede { margin: 16px 0 0; color: var(--text-2); font-size: 19px; max-width: 34em; }
+
+    /* The three states */
+    .states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 44px; }
+    .state { display: flex; gap: 16px; align-items: flex-start; }
+    .state .halo { width: 36px; height: 36px; }
+    .state .halo::after { inset: 11px; }
+    .state h3 { font-size: 20px; font-weight: 600; line-height: 36px; }
+    .state p { margin: 2px 0 0; color: var(--text-2); font-size: 16px; }
+
+    /* Features: text beside a real screenshot */
+    .feature { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; padding: 40px 0; }
+    .feature:nth-of-type(even) .feature-text { order: 2; }
+    .feature h3 { font-size: 30px; line-height: 1.12; letter-spacing: -0.02em; font-weight: 700; }
+    .feature p { margin: 14px 0 0; color: var(--text-2); font-size: 17px; max-width: 31em; }
+    .shot { border-radius: 18px; overflow: hidden; border: 1px solid var(--hairline); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); }
+    .shot.narrow { max-width: 340px; justify-self: center; }
+
+    /* Smaller things, as a plain list */
+    .also { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 48px; margin: 40px 0 0; padding: 0; list-style: none; }
+    .also li { padding-left: 22px; position: relative; color: var(--text-2); }
+    .also li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .also strong { color: var(--text); font-weight: 600; }
+
+    /* Privacy */
+    .privacy { border-radius: var(--radius-card); padding: 40px; }
+    .privacy ul { margin: 26px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+    .privacy li { display: grid; grid-template-columns: 220px 1fr; gap: 16px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+    .privacy li span:first-child { font-weight: 600; }
+    .privacy li span:last-child { color: var(--text-2); }
+    .privacy .never { margin: 26px 0 0; font-weight: 600; }
+
+    /* Install: an actual sequence */
+    .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin: 40px 0 0; padding: 0; list-style: none; }
+    .steps li { counter-increment: step; }
+    .steps li::before { content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--glass); font-weight: 600; margin-bottom: 14px; }
+    .steps h3 { font-size: 19px; font-weight: 600; }
+    .steps p { margin: 8px 0 0; color: var(--text-2); font-size: 16px; }
+
+    /* FAQ */
+    .faq { margin-top: 36px; max-width: 760px; }
+    .faq details { border-top: 1px solid var(--hairline); }
+    .faq details:last-child { border-bottom: 1px solid var(--hairline); }
+    .faq summary { cursor: pointer; list-style: none; padding: 20px 0; font-weight: 600; font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; color: var(--text-2); font-weight: 400; font-size: 22px; line-height: 1; }
+    .faq details[open] summary::after { content: "–"; }
+    .faq details p { margin: 0 0 20px; color: var(--text-2); max-width: 40em; }
+
+    /* Closing and footer */
+    .closing { text-align: center; padding: 96px 0; }
+    .closing img { width: 112px; height: 112px; margin: 0 auto 18px; }
+    .closing h2 { margin: 0 auto; }
+    .closing p { margin: 12px auto 0; color: var(--text-2); font-size: 19px; }
+    .closing .actions { justify-content: center; }
+    footer { border-top: 1px solid var(--hairline); padding: 28px 0 40px; font-size: 14px; color: var(--text-2); }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; }
+    footer a { color: var(--text-2); }
+    footer .quiet { margin-left: auto; }
+
+    @media (max-width: 860px) {
+      .hero { padding-top: 56px; }
+      .pulse span { width: 300px; height: 300px; margin: -150px 0 0 -150px; }
+      .hero .wrap, .feature { grid-template-columns: 1fr; gap: 36px; }
+      .feature:nth-of-type(even) .feature-text { order: 0; }
+      .states, .steps { grid-template-columns: 1fr; }
+      .also { grid-template-columns: 1fr; }
+      .privacy { padding: 26px 20px; }
+      .privacy li { grid-template-columns: 1fr; gap: 4px; }
+      .nav-links a:not(.button) { display: none; }
+      footer .quiet { margin-left: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .pulse span { animation: none; }
+      .halo, .halo::after { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/favicon.png" alt="" width="30" height="30">Netty</a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/alvaldes/netty">GitHub</a>
+        <a class="button button-primary button-small" href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Know when your internet drops.</h1>
+          <p class="lede">A dot in your Mac's menu bar: green when you're online, yellow when the connection is poor, red when there's no internet. Free and open source.</p>
+          <div class="actions">
+            <a class="button button-primary" href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg>
+              Download for Mac
+            </a>
+            <a class="button button-secondary glass" href="https://github.com/alvaldes/netty">View the source</a>
+          </div>
+          <p class="fine">Version 1.0.0, for macOS 26 or later.</p>
+        </div>
+
+        <div class="demo">
+          <div class="pulse" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="popover glass" role="status" aria-live="polite" aria-label="Your connection, measured in this browser">
+            <div class="status">
+              <div class="halo" aria-hidden="true"></div>
+              <div>
+                <div class="status-title" id="demo-title">Checking…</div>
+                <div class="status-sub" id="demo-sub">Measuring your connection</div>
+              </div>
+            </div>
+            <div class="tiles">
+              <div class="tile"><small>Latency</small><strong id="demo-latency">—</strong></div>
+              <div class="tile"><small>Jitter</small><strong id="demo-jitter">—</strong></div>
+              <div class="tile"><small>Loss</small><strong id="demo-loss">—</strong></div>
+            </div>
+            <div class="demo-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3a14 14 0 0 1 0 18"></path><path d="M12 3a14 14 0 0 0 0 18"></path></svg>
+              <span id="demo-target">Answers from this page's server</span>
+            </div>
+          </div>
+          <p class="demo-note">That's your connection, measured right now in this browser with Netty's own rules. In the menu bar, Netty checks every 10 seconds.</p>
+        </div>
+      </div>
+    </div>
+
+    <section aria-labelledby="states-title">
+      <div class="wrap">
+        <h2 id="states-title">Three colors, one glance.</h2>
+        <div class="states">
+          <div class="state" style="--status: var(--green)">
+            <div class="halo" aria-hidden="true"></div>
+            <div><h3>Online</h3><p>The internet answers, fast and steady.</p></div>
+          </div>
+          <div class="state" style="--status: var(--yellow)">
+            <div class="halo" aria-hidden="true"></div>
+            <div><h3>Degraded</h3><p>You're online, but latency, jitter or packet loss is high: calls lag and pages stall.</p></div>
+          </div>
+          <div class="state" style="--status: var(--red)">
+            <div class="halo" aria-hidden="true"></div>
+            <div><h3>Offline</h3><p>No internet, even when Wi-Fi says connected. A hotel sign-in page counts too.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <h2 id="features-title">Everything about your connection, nothing more.</h2>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>It checks the internet, not just your Wi-Fi.</h3>
+            <p>Netty asks Apple's captive portal page and Google's whether the internet really answers, and times a handshake with 1.1.1.1. A click on the icon checks at once and confirms a drop in seconds.</p>
+          </div>
+          <img class="shot narrow" src="assets/screenshots/popover-online-dark.png" width="320" height="406" alt="Netty's popover: online for 2 hours, latency 24 ms, jitter 3 ms, no loss, last speed test 9.2 down and 19.5 up, Wi-Fi Home, local and public IP">
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>A speed test when you want one.</h3>
+            <p>Download, upload and responsiveness from Apple's built-in networkQuality, with no extra servers. Run it from the popover or on a schedule; scheduled tests skip an iPhone hotspot.</p>
+          </div>
+          <img class="shot narrow" src="assets/screenshots/popover-degraded-dark.png" width="320" height="406" alt="Netty's popover: degraded by high latency while a speed test runs">
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Your popover, your way.</h3>
+            <p>Show, hide and drag its sections, or switch off single parts: keep only latency, or hide the IP addresses. A live preview follows every change.</p>
+          </div>
+          <img class="shot" src="assets/screenshots/settings-popover.png" width="880" height="568" alt="Settings, Popover: sections with switches and checkboxes beside a live preview of the popover">
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>An icon that fits your menu bar.</h3>
+            <p>In color or black and white, with a circle symbol for each status or an image of your own. Pick what each click does, too: the popover, a quick menu, a speed test or Settings.</p>
+          </div>
+          <img class="shot" src="assets/screenshots/settings-icon.png" width="880" height="568" alt="Settings, Menu Bar Icon: mode, size, a symbol per status and click actions beside a live preview">
+        </div>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Rules you can read, and change.</h3>
+            <p>Every limit behind the colors says what it means in plain words. Tune when yellow and red appear, or go back to the defaults in one click.</p>
+          </div>
+          <img class="shot" src="assets/screenshots/settings-connection.png" width="880" height="568" alt="Settings, Connection: check interval and the latency, jitter and packet loss limits, each explained">
+        </div>
+
+        <ul class="also">
+          <li><strong>Notifications</strong> when the connection drops and when it comes back, with how long you were offline. Focus modes are respected.</li>
+          <li><strong>Network details:</strong> the Wi-Fi name, whether a VPN carries your traffic, and your local and public IP. Click an address to copy it.</li>
+          <li><strong>Launch at login,</strong> so the dot is there whenever your Mac is.</li>
+          <li><strong>Native and light:</strong> built in Swift for macOS 26, with the look of the system around it.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="privacy" aria-labelledby="privacy-title">
+      <div class="wrap">
+        <div class="privacy glass">
+          <h2 id="privacy-title">What leaves your Mac.</h2>
+          <p class="section-lede">Only the checks themselves, to servers that already answer this kind of question.</p>
+          <ul>
+            <li><span>Apple and Google</span><span>Their captive portal pages, to see whether the internet answers.</span></li>
+            <li><span>Cloudflare 1.1.1.1</span><span>A handshake to time the latency, and your public IP, looked up only while the popover shows it.</span></li>
+            <li><span>Apple's speed test servers</span><span>Only when a speed test runs.</span></li>
+          </ul>
+          <p class="never">No analytics, no telemetry, no account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <h2 id="install-title">Install in a minute.</h2>
+        <ol class="steps">
+          <li>
+            <h3>Download</h3>
+            <p>Open <a href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Netty.dmg</a> and drag Netty to Applications.</p>
+          </li>
+          <li>
+            <h3>Open it once</h3>
+            <p>Netty isn't notarized by Apple yet, so macOS stops it the first time. Choose Done, then click Open Anyway in System Settings, Privacy &amp; Security.</p>
+          </li>
+          <li>
+            <h3>Say hello</h3>
+            <p>The welcome window asks for notifications and Location, which macOS needs to share the Wi-Fi name. Both are optional.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <div class="wrap">
+        <h2 id="faq-title">Questions, answered.</h2>
+        <div class="faq">
+          <details>
+            <summary>Is Netty free?</summary>
+            <p>Yes. Netty is free and open source under the GPL-3.0 license. The code is on GitHub.</p>
+          </details>
+          <details>
+            <summary>Why does it ask for Location?</summary>
+            <p>macOS shares the name of your Wi-Fi network only with apps that have Location access. Netty never reads where you are, and works without it: you just see “Wi-Fi” instead of the name.</p>
+          </details>
+          <details>
+            <summary>Does it slow down my connection?</summary>
+            <p>No. A check is a few hundred bytes every 10 seconds. Only a speed test uses real data, tens to hundreds of megabytes, and it runs only when you ask or on a schedule you turn on.</p>
+          </details>
+          <details>
+            <summary>What makes the dot turn yellow?</summary>
+            <p>By default, a median latency of 150 ms or more, jitter of 50 ms or more, or 20% of checks without an answer. You can change each limit in Settings.</p>
+          </details>
+          <details>
+            <summary>Why isn't it on the Mac App Store?</summary>
+            <p>Netty ships from GitHub so it can stay free and open, with no account in between. Notarization by Apple is on the way.</p>
+          </details>
+          <details>
+            <summary>Which Macs does it run on?</summary>
+            <p>Any Mac with macOS 26 or later.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <div class="closing">
+      <div class="wrap">
+        <img src="assets/icon-512.png" alt="Netty's icon: a green dot with a soft halo on graphite" width="112" height="112">
+        <h2>Netty</h2>
+        <p>Your network companion in the menu bar.</p>
+        <div class="actions">
+          <a class="button button-primary" href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Download for Mac</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Netty 1.0.0</span>
+      <a href="https://github.com/alvaldes/netty">Source code</a>
+      <a href="https://github.com/alvaldes/netty/issues">Report an issue</a>
+      <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>
+      <span>Made by <a href="https://alvaldes.vercel.app">@alvaldes</a></span>
+      <span class="quiet">No cookies, no tracking.</span>
+    </div>
+  </footer>
+
+  <script>
+    // The live demo: Netty's rules, measured against this page's own server.
+    (() => {
+      const rules = { window: 6, latency: 150, jitter: 50, loss: 0.2 };
+      const root = document.documentElement;
+      const el = (id) => document.getElementById(id);
+      const samples = [];
+      const opened = Date.now();
+      const colors = { online: "var(--green)", degraded: "var(--yellow)", offline: "var(--red)" };
+
+      async function probe() {
+        if (!navigator.onLine) return null;
+        const start = performance.now();
+        try {
+          await fetch(`${location.pathname}?netty-check=${Date.now()}`, { method: "HEAD", cache: "no-store" });
+          return performance.now() - start;
+        } catch {
+          return null;
+        }
+      }
+
+      function median(values) {
+        const sorted = [...values].sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      }
+
+      function render() {
+        const answered = samples.filter((s) => s !== null);
+        const loss = samples.length ? (samples.length - answered.length) / samples.length : 0;
+        const latency = answered.length ? median(answered) : null;
+        const jitter = answered.length > 1
+          ? answered.slice(1).reduce((sum, value, i) => sum + Math.abs(value - answered[i]), 0) / (answered.length - 1)
+          : null;
+        const offline = !navigator.onLine || (samples.length >= 3 && answered.length === 0);
+        const degraded = !offline && ((latency ?? 0) >= rules.latency || (jitter ?? 0) >= rules.jitter || loss >= rules.loss);
+        const status = offline ? "offline" : degraded ? "degraded" : "online";
+
+        root.style.setProperty("--status", colors[status]);
+        el("demo-title").textContent = { online: "Online", degraded: "Degraded", offline: "Offline" }[status];
+        const seconds = Math.round((Date.now() - opened) / 1000);
+        el("demo-sub").textContent = offline ? "No answer from the internet" : `Measured over ${answered.length} check${answered.length === 1 ? "" : "s"}, ${seconds} s`;
+        el("demo-latency").textContent = offline || latency === null ? "—" : `${Math.round(latency)} ms`;
+        el("demo-jitter").textContent = offline || jitter === null ? "—" : `${Math.round(jitter)} ms`;
+        el("demo-loss").textContent = offline ? "—" : `${Math.round(loss * 100)} %`;
+      }
+
+      async function check() {
+        samples.push(await probe());
+        if (samples.length > rules.window) samples.shift();
+        render();
+      }
+
+      async function run() {
+        if (location.protocol === "file:") {
+          el("demo-title").textContent = "Live check";
+          el("demo-sub").textContent = "Open this page from a web server to try it";
+          return;
+        }
+        // Fill the window quickly, then check at Netty's pace.
+        for (let i = 0; i < rules.window; i++) {
+          await check();
+          await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+        setInterval(() => { if (!document.hidden) check(); }, 10000);
+      }
+
+      addEventListener("online", check);
+      addEventListener("offline", render);
+      run();
+    })();
+  </script>
+</body>
+</html>
