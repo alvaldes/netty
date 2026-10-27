@@ -49,6 +49,18 @@ struct IconSettings: View {
                 }
             }
 
+            SettingsCard(title: "Clicks", symbol: "cursorarrow.click.2",
+                         subtitle: "The quick menu has Settings and Quit. Control-click counts as a right click.") {
+                SettingRow(title: "Left click") {
+                    clickPicker("Left click", selection: $settings.clickBehavior.left)
+                }
+                Divider()
+                SettingRow(title: "Right click",
+                           detail: "One click always opens the popover or the quick menu, so Quit stays in reach.") {
+                    clickPicker("Right click", selection: $settings.clickBehavior.right)
+                }
+            }
+
             SettingsCard(title: "Glyphs", symbol: "circle.dotted.circle",
                          subtitle: "Choose a glyph for each status, or import your own SVG, PDF or PNG.") {
                 ForEach(Array(Self.statuses.enumerated()), id: \.offset) { index, item in
@@ -62,6 +74,14 @@ struct IconSettings: View {
                 }
             }
         }
+    }
+
+    private func clickPicker(_ title: String, selection: Binding<ClickAction>) -> some View {
+        Picker(title, selection: selection) {
+            ForEach(ClickAction.allCases, id: \.self) { Text($0.title).tag($0) }
+        }
+        .labelsHidden()
+        .fixedSize()
     }
 
     private var modeDetail: String {
@@ -132,6 +152,17 @@ private struct IconPreview: View {
             .frame(width: 44, height: 24)
             .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.92), in: .rect(cornerRadius: 6))
             .accessibilityHidden(true)
+    }
+}
+
+private extension ClickAction {
+    var title: String {
+        switch self {
+        case .showPopover: "Show the popover"
+        case .showMenu: "Show the quick menu"
+        case .runSpeedTest: "Run a speed test"
+        case .openSettings: "Open Settings"
+        }
     }
 }
 

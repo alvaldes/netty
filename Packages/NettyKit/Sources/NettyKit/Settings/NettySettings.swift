@@ -62,6 +62,14 @@ public final class NettySettings {
         didSet { store(iconStyle, forKey: Key.iconStyle) }
     }
 
+    public var clickBehavior: ClickBehavior {
+        didSet {
+            let validated = clickBehavior.validated
+            if validated != clickBehavior { clickBehavior = validated }
+            store(clickBehavior, forKey: Key.clickBehavior)
+        }
+    }
+
     /// The welcome window asks for permissions once, on the first launch.
     public var hasCompletedOnboarding: Bool {
         didSet { defaults.set(hasCompletedOnboarding, forKey: Key.hasCompletedOnboarding) }
@@ -81,6 +89,7 @@ public final class NettySettings {
         static let notifiesWhenBackOnline = "notifiesWhenBackOnline"
         static let iconStyle = "iconStyle"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
+        static let clickBehavior = "clickBehavior"
     }
 
     public init(defaults: UserDefaults = .standard) {
@@ -94,6 +103,7 @@ public final class NettySettings {
         notifiesWhenBackOnline = defaults.object(forKey: Key.notifiesWhenBackOnline) as? Bool ?? true
         iconStyle = Self.decoded(MenuBarIconStyle.self, forKey: Key.iconStyle, in: defaults) ?? .defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
+        clickBehavior = Self.decoded(ClickBehavior.self, forKey: Key.clickBehavior, in: defaults)?.validated ?? .defaults
     }
 
     public func resetQualityRules() {

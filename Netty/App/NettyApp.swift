@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct NettyApp: App {
+    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @State private var settings: NettySettings
     @State private var monitor: ConnectionMonitor
     @State private var speedTester: SpeedTester
@@ -10,6 +11,7 @@ struct NettyApp: App {
     @State private var notifier: ConnectionNotifier
     @State private var launchAtLogin = LaunchAtLogin()
     @State private var notificationPermission = NotificationPermission()
+    private let statusItem = StatusItemHolder()
 
     init() {
         var defaults = UserDefaults.standard
@@ -55,6 +57,15 @@ struct NettyApp: App {
         _speedTester = State(initialValue: speedTester)
         _location = State(initialValue: location)
         _notifier = State(initialValue: notifier)
+        // The status bar takes items once the app has finished launching.
+        let holder = statusItem
+        DispatchQueue.main.async {
+            holder.controller = StatusItemController(settings: settings, monitor: monitor,
+                                                     speedTester: speedTester, location: location)
+            #if DEBUG
+            holder.controller?.checkClicksIfRequested()
+            #endif
+        }
         // Probe, keep the speed test schedule and follow Location access for the whole app lifetime.
         Task { await monitor.run() }
         Task { await speedTester.runSchedule() }
@@ -67,13 +78,6 @@ struct NettyApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
-            PopoverContainer(monitor: monitor, speedTester: speedTester, location: location)
-        } label: {
-            Image(nsImage: MenuBarIconRenderer.image(for: settings.iconStyle.appearance(for: monitor.status)))
-        }
-        .menuBarExtraStyle(.window)
-
         Window("Welcome to Netty", id: OnboardingView.windowID) {
             OnboardingView(settings: settings, location: location, notifications: notificationPermission,
                            requestNotifications: { await notifier.requestAuthorization() })
@@ -88,34 +92,13 @@ struct NettyApp: App {
     }
 }
 
-/// Feeds the popover and gives it SwiftUI's `openSettings`, which only views receive.
-private struct PopoverContainer: View {
-    let monitor: ConnectionMonitor
-    let speedTester: SpeedTester
-    let location: LocationPermission
-    @Environment(\.openSettings) private var openSettings
+/// A menu bar app has no main window: closing the popover or Settings must not
+/// quit it, as SwiftUI does when the last window closes.
+private final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+}
 
-    var body: some View {
-        PopoverView(
-            model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location),
-            actions: PopoverActions(
-                opened: { Task { await monitor.recheck() } },
-                runSpeedTest: { Task { await speedTester.run() } },
-                requestWiFiName: { location.request() },
-                openSettings: showSettings,
-                quit: { NSApplication.shared.terminate(nil) }
-            )
-        )
-    }
-
-    private func showSettings() {
-        // A menu bar agent is not active; bring the window to the front.
-        NSApp.activate()
-        openSettings()
-        // The window exists on the next turn.
-        DispatchQueue.main.async {
-            if !NSApp.isActive { NSApp.activate(ignoringOtherApps: true) }
-            NSApp.windows.first { $0.identifier?.rawValue.contains("Settings") == true }?.makeKeyAndOrderFront(nil)
-        }
-    }
+/// Keeps the menu bar item alive for the app's lifetime.
+private final class StatusItemHolder {
+    var controller: StatusItemController?
 }

@@ -21,8 +21,6 @@ struct PopoverModel {
 
 /// What the popover's controls do.
 struct PopoverActions {
-    /// The popover opened: probe now so it shows fresh numbers.
-    var opened: () -> Void = {}
     var runSpeedTest: () -> Void = {}
     var requestWiFiName: () -> Void = {}
     var openSettings: () -> Void = {}

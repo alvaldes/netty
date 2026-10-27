@@ -20,52 +20,11 @@ struct PopoverView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .keyboardShortcut("q")
+                    .focusEffectDisabled()
             }
         }
         .padding(16)
         .frame(width: 320)
-        // Opening the popover is the re-check: no button needed.
-        .onPopoverOpen(perform: actions.opened)
-    }
-}
-
-// MARK: - Opening
-
-private extension View {
-    /// Runs `action` every time the popover opens.
-    ///
-    /// A `MenuBarExtra` window keeps its views between openings, so `onAppear`
-    /// runs only the first time; the window becoming key marks every opening.
-    func onPopoverOpen(perform action: @escaping () -> Void) -> some View {
-        modifier(PopoverOpenObserver(action: action))
-    }
-}
-
-private struct PopoverOpenObserver: ViewModifier {
-    let action: () -> Void
-    @State private var window: NSWindow?
-
-    func body(content: Content) -> some View {
-        content
-            .background(WindowReader(window: $window))
-            // The first opening can come before the window is known.
-            .onAppear(perform: action)
-            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
-                if let window, note.object as? NSWindow === window { action() }
-            }
-    }
-}
-
-/// Reports the window hosting this view.
-private struct WindowReader: NSViewRepresentable {
-    @Binding var window: NSWindow?
-
-    func makeNSView(context: Context) -> NSView { NSView() }
-
-    func updateNSView(_ view: NSView, context: Context) {
-        guard window == nil else { return }
-        // The view joins its window after this pass.
-        DispatchQueue.main.async { window = view.window }
     }
 }
 
@@ -106,6 +65,8 @@ private struct StatusHeader: View {
             }
             .buttonStyle(.plain)
             .keyboardShortcut(",")
+            // The popover gives its first button keyboard focus; the ring is noise here.
+            .focusEffectDisabled()
             .help("Settings")
             .accessibilityLabel("Settings")
         }
@@ -213,6 +174,7 @@ private struct SpeedCard: View {
                 .buttonStyle(PlainCardButtonStyle())
                 .disabled(model.isTestingSpeed || !model.isOnline)
                 .keyboardShortcut("t")
+                .focusEffectDisabled()
             }
         }
         .padding(14)
