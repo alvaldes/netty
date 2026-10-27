@@ -16,63 +16,71 @@ struct IconSettings: View {
                                   "antenna.radiowaves.left.and.right", "bolt.horizontal.circle"]
 
     var body: some View {
-        VStack(spacing: 16) {
-            SettingsCard(title: "Preview", symbol: "eye") {
-                HStack(spacing: 28) {
+        HStack(alignment: .top, spacing: 20) {
+            // What changes the icon first, next to the preview; clicks do not change it.
+            VStack(spacing: 16) {
+                SettingsCard(title: "Style", symbol: "paintpalette") {
+                    SettingRow(title: "Mode", detail: modeDetail) {
+                        Picker("Mode", selection: $settings.iconStyle.mode) {
+                            Text("Color").tag(MenuBarIconStyle.Mode.color)
+                            Text("Black & White").tag(MenuBarIconStyle.Mode.monochrome)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .fixedSize()
+                    }
+                    Divider()
+                    SettingRow(title: "Size") {
+                        HStack {
+                            Slider(value: $settings.iconStyle.size, in: MenuBarIconStyle.sizeRange, step: 1)
+                                .frame(width: 160)
+                            Text("\(Int(settings.iconStyle.size)) pt").monospacedDigit().frame(width: 40, alignment: .trailing)
+                        }
+                    }
+                }
+
+                SettingsCard(title: "Glyphs", symbol: "circle.dotted.circle",
+                             subtitle: "Choose a glyph for each status, or import your own SVG, PDF or PNG.") {
+                    ForEach(Array(Self.statuses.enumerated()), id: \.offset) { index, item in
+                        if index > 0 { Divider() }
+                        SettingRow(title: item.0) {
+                            glyphMenu(for: item.1)
+                        }
+                    }
+                    if let importError {
+                        Text(importError).font(.caption).foregroundStyle(.red)
+                    }
+                }
+                SettingsCard(title: "Clicks", symbol: "cursorarrow.click.2",
+                             subtitle: "The quick menu has Settings and Quit. Control-click counts as a right click.") {
+                    SettingRow(title: "Left click") {
+                        clickPicker("Left click", selection: $settings.clickBehavior.left)
+                    }
+                    Divider()
+                    SettingRow(title: "Right click",
+                               detail: "One click always opens the popover or the quick menu, so Quit stays in reach.") {
+                        clickPicker("Right click", selection: $settings.clickBehavior.right)
+                    }
+                }
+
+            }
+            .frame(maxWidth: .infinity)
+
+            // Beside the controls, so every change shows without scrolling.
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Live preview").font(.caption).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 14) {
                     ForEach(Self.statuses, id: \.0) { title, status in
-                        VStack(spacing: 6) {
+                        HStack(spacing: 10) {
                             IconPreview(appearance: settings.iconStyle.appearance(for: status), customIcons: customIcons)
                             Text(title).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity)
+                .padding(16)
+                .card(radius: 16)
             }
-
-            SettingsCard(title: "Style", symbol: "paintpalette") {
-                SettingRow(title: "Mode", detail: modeDetail) {
-                    Picker("Mode", selection: $settings.iconStyle.mode) {
-                        Text("Color").tag(MenuBarIconStyle.Mode.color)
-                        Text("Black & White").tag(MenuBarIconStyle.Mode.monochrome)
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .fixedSize()
-                }
-                Divider()
-                SettingRow(title: "Size") {
-                    HStack {
-                        Slider(value: $settings.iconStyle.size, in: MenuBarIconStyle.sizeRange, step: 1)
-                            .frame(width: 160)
-                        Text("\(Int(settings.iconStyle.size)) pt").monospacedDigit().frame(width: 40, alignment: .trailing)
-                    }
-                }
-            }
-
-            SettingsCard(title: "Clicks", symbol: "cursorarrow.click.2",
-                         subtitle: "The quick menu has Settings and Quit. Control-click counts as a right click.") {
-                SettingRow(title: "Left click") {
-                    clickPicker("Left click", selection: $settings.clickBehavior.left)
-                }
-                Divider()
-                SettingRow(title: "Right click",
-                           detail: "One click always opens the popover or the quick menu, so Quit stays in reach.") {
-                    clickPicker("Right click", selection: $settings.clickBehavior.right)
-                }
-            }
-
-            SettingsCard(title: "Glyphs", symbol: "circle.dotted.circle",
-                         subtitle: "Choose a glyph for each status, or import your own SVG, PDF or PNG.") {
-                ForEach(Array(Self.statuses.enumerated()), id: \.offset) { index, item in
-                    if index > 0 { Divider() }
-                    SettingRow(title: item.0) {
-                        glyphMenu(for: item.1)
-                    }
-                }
-                if let importError {
-                    Text(importError).font(.caption).foregroundStyle(.red)
-                }
-            }
+            .fixedSize()
         }
     }
 
