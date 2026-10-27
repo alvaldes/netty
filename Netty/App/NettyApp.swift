@@ -59,7 +59,11 @@ struct NettyApp: App {
         Task { await monitor.run() }
         Task { await speedTester.runSchedule() }
         Task { await location.monitor() }
-        Task { await notifier.requestAuthorization() }
+        // The first launch asks in the welcome window, with the reason; later
+        // launches only register Netty's presenter (no prompt once decided).
+        if settings.hasCompletedOnboarding {
+            Task { await notifier.requestAuthorization() }
+        }
     }
 
     var body: some Scene {
@@ -69,6 +73,13 @@ struct NettyApp: App {
             Image(nsImage: MenuBarIconRenderer.image(for: settings.iconStyle.appearance(for: monitor.status)))
         }
         .menuBarExtraStyle(.window)
+
+        Window("Welcome to Netty", id: OnboardingView.windowID) {
+            OnboardingView(settings: settings, location: location, notifications: notificationPermission,
+                           requestNotifications: { await notifier.requestAuthorization() })
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(settings.hasCompletedOnboarding ? .suppressed : .presented)
 
         Settings {
             SettingsView(settings: settings, launchAtLogin: launchAtLogin, location: location,

@@ -62,6 +62,11 @@ public final class NettySettings {
         didSet { store(iconStyle, forKey: Key.iconStyle) }
     }
 
+    /// The welcome window asks for permissions once, on the first launch.
+    public var hasCompletedOnboarding: Bool {
+        didSet { defaults.set(hasCompletedOnboarding, forKey: Key.hasCompletedOnboarding) }
+    }
+
     /// Called after any setting changes, to apply it to the running services.
     public var onChange: (() -> Void)?
 
@@ -75,6 +80,7 @@ public final class NettySettings {
         static let notifiesWhenOffline = "notifiesWhenOffline"
         static let notifiesWhenBackOnline = "notifiesWhenBackOnline"
         static let iconStyle = "iconStyle"
+        static let hasCompletedOnboarding = "hasCompletedOnboarding"
     }
 
     public init(defaults: UserDefaults = .standard) {
@@ -87,6 +93,7 @@ public final class NettySettings {
         notifiesWhenOffline = defaults.object(forKey: Key.notifiesWhenOffline) as? Bool ?? true
         notifiesWhenBackOnline = defaults.object(forKey: Key.notifiesWhenBackOnline) as? Bool ?? true
         iconStyle = Self.decoded(MenuBarIconStyle.self, forKey: Key.iconStyle, in: defaults) ?? .defaults
+        hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
     }
 
     public func resetQualityRules() {

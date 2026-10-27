@@ -24,12 +24,20 @@ enum SettingsSnapshot {
                 render(view, appearance: appearance, to: output.appending(path: "\(area.rawValue)-\(name).png"))
             }
         }
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            let view = OnboardingView(settings: settings, location: LocationPermission(),
+                                      notifications: NotificationPermission(), requestNotifications: {})
+                .background(Color(nsColor: .windowBackgroundColor))
+            render(view, appearance: appearance, size: CGSize(width: 440, height: 560),
+                   to: output.appending(path: "onboarding-\(name).png"))
+        }
         exit(0)
     }
 
-    private static func render(_ view: some View, appearance: NSAppearance.Name, to url: URL) {
+    private static func render(_ view: some View, appearance: NSAppearance.Name,
+                               size: CGSize = CGSize(width: 760, height: 568), to url: URL) {
         let hosting = NSHostingView(rootView: view)
-        hosting.frame = CGRect(x: 0, y: 0, width: 760, height: 568)
+        hosting.frame = CGRect(origin: .zero, size: size)
         let window = NSWindow(contentRect: hosting.frame, styleMask: [.titled], backing: .buffered, defer: false)
         window.appearance = NSAppearance(named: appearance)
         window.contentView = hosting

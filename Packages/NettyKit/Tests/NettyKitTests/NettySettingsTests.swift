@@ -128,6 +128,14 @@ struct NettySettingsTests {
         #expect(NettySettings(defaults: defaults).qualityRules == .defaults)
     }
 
+    @Test func onboardingShowsUntilCompleted() {
+        let defaults = freshDefaults()
+        let sut = NettySettings(defaults: defaults)
+        #expect(!sut.hasCompletedOnboarding)
+        sut.hasCompletedOnboarding = true
+        #expect(NettySettings(defaults: defaults).hasCompletedOnboarding)
+    }
+
     @Test func reportsEachChange() {
         let sut = NettySettings(defaults: freshDefaults())
         var changes = 0
