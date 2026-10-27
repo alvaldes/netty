@@ -1,0 +1,11 @@
+{
+  "base_rtt": 365.7554931640625,
+  "dl_bytes_transferred": 19266517,
+  "dl_throughput": 9188107,
+  "end_date": "2026-10-27 12:33:36.005",
+  "interface_name": "en10",
+  "responsiveness": 61.11968994140625,
+  "start_date": "2026-10-27 12:33:15.630",
+  "ul_bytes_transferred": 23855100,
+  "ul_throughput": 19455260
+}

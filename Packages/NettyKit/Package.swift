@@ -15,6 +15,7 @@ let package = Package(
         .testTarget(
             name: "NettyKitTests",
             dependencies: ["NettyKit"],
+            resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
     ]
