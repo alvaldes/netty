@@ -16,6 +16,9 @@ enum PopoverSnapshot {
             for (scheme, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
                 render(PopoverView(model: model), appearance: appearance,
                        to: output.appending(path: "\(name)-\(scheme).png"))
+                // Only the content, for pages that draw the popover's glass behind it.
+                render(PopoverView(model: model), appearance: appearance, isClear: true,
+                       to: output.appending(path: "\(name)-\(scheme)-clear.png"))
             }
         }
         exit(0)
@@ -55,10 +58,15 @@ enum PopoverSnapshot {
                 ("only-latency", elements)]
     }
 
-    private static func render(_ view: some View, appearance: NSAppearance.Name, to url: URL) {
-        let hosting = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
+    private static func render(_ view: some View, appearance: NSAppearance.Name, isClear: Bool = false, to url: URL) {
+        let background = isClear ? Color.clear : Color(nsColor: .windowBackgroundColor)
+        let hosting = NSHostingView(rootView: view.background(background))
         hosting.frame = CGRect(origin: .zero, size: hosting.fittingSize)
         let window = NSWindow(contentRect: hosting.frame, styleMask: [.titled], backing: .buffered, defer: false)
+        if isClear {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+        }
         window.appearance = NSAppearance(named: appearance)
         window.contentView = hosting
         hosting.layoutSubtreeIfNeeded()

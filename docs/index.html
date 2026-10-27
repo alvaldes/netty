@@ -77,7 +77,7 @@
     }
 
     /* Navigation */
-    .nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); background: rgba(21, 23, 26, 0.65); border-bottom: 1px solid var(--hairline); }
+    .nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); background: rgba(21, 23, 26, 0.82); border-bottom: 1px solid var(--hairline); }
     .nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; font-size: 17px; }
     .brand img { width: 30px; height: 30px; }
@@ -150,6 +150,10 @@
     .feature p { margin: 14px 0 0; color: var(--text-2); font-size: 17px; max-width: 31em; }
     .shot { border-radius: 18px; overflow: hidden; border: 1px solid var(--hairline); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); }
     .shot.narrow { max-width: 340px; justify-self: center; }
+    /* The popover is translucent in the app: its content, rendered without a background,
+       sits on the same glass as the live demo, so the page's color shows through. */
+    .shot-glass { justify-self: center; max-width: 340px; border-radius: 18px; overflow: hidden;
+      background: rgba(44, 47, 52, 0.62); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); }
 
     /* Smaller things, as a plain list */
     .also { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 48px; margin: 40px 0 0; padding: 0; list-style: none; }
@@ -299,7 +303,7 @@
             <h3>It checks the internet, not just your Wi-Fi.</h3>
             <p>Netty asks Apple's captive portal page and Google's whether the internet really answers, and times a handshake with 1.1.1.1. A click on the icon checks at once and confirms a drop in seconds.</p>
           </div>
-          <img class="shot narrow" src="assets/screenshots/popover-online-dark.png" width="320" height="406" alt="Netty's popover: online for 2 hours, latency 24 ms, jitter 3 ms, no loss, last speed test 9.2 down and 19.5 up, Wi-Fi Home, local and public IP">
+          <div class="shot-glass glass"><img src="assets/screenshots/popover-online-glass.png" width="320" height="406" alt="Netty's popover: online for 2 hours, latency 24 ms, jitter 3 ms, no loss, last speed test 9.2 down and 19.5 up, Wi-Fi Home, local and public IP"></div>
         </div>
 
         <div class="feature">
@@ -307,7 +311,7 @@
             <h3>A speed test when you want one.</h3>
             <p>Download, upload and responsiveness from Apple's built-in networkQuality, with no extra servers. Run it from the popover or on a schedule; scheduled tests skip an iPhone hotspot.</p>
           </div>
-          <img class="shot narrow" src="assets/screenshots/popover-degraded-dark.png" width="320" height="406" alt="Netty's popover: degraded by high latency while a speed test runs">
+          <div class="shot-glass glass"><img src="assets/screenshots/popover-degraded-glass.png" width="320" height="406" alt="Netty's popover: degraded by high latency while a speed test runs"></div>
         </div>
 
         <div class="feature">
