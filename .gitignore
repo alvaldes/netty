@@ -16,3 +16,6 @@ Config/Signing.local.xcconfig
 
 # Local ODD planning notes
 odd/
+
+# Release disk images (scripts/release.sh)
+dist/
