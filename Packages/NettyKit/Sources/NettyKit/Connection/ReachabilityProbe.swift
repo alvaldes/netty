@@ -6,21 +6,31 @@ nonisolated enum ReachabilityProbe {
     static let appleURL = URL(string: "http://captive.apple.com/hotspot-detect.html")!
     /// Fallback when Apple's endpoint is down or blocked: answers 204 with no body.
     static let googleURL = URL(string: "https://www.google.com/generate_204")!
-    static let timeout: TimeInterval = 5
+    /// Short enough that a dead connection shows quickly; both endpoints answer in well under it.
+    static let timeout: TimeInterval = 3
 
     static func isAppleSuccess(statusCode: Int, body: Data) -> Bool {
         statusCode == 200 && String(decoding: body, as: UTF8.self).contains("<BODY>Success</BODY>")
     }
 
+    /// Asks both at once: the first good answer wins, so a slow or blocked
+    /// endpoint never adds its timeout to the other's.
     @concurrent
     static func check() async -> Bool {
-        if let (body, status) = await fetch(appleURL), isAppleSuccess(statusCode: status, body: body) {
-            return true
+        await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                guard let (body, status) = await fetch(appleURL) else { return false }
+                return isAppleSuccess(statusCode: status, body: body)
+            }
+            group.addTask {
+                await fetch(googleURL)?.1 == 204
+            }
+            for await isReachable in group where isReachable {
+                group.cancelAll()
+                return true
+            }
+            return false
         }
-        if let (_, status) = await fetch(googleURL), status == 204 {
-            return true
-        }
-        return false
     }
 
     private static let session: URLSession = {

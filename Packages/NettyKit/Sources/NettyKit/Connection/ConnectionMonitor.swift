@@ -65,7 +65,8 @@ public final class ConnectionMonitor {
 
     private var evaluator: QualityEvaluator
     private let client: ConnectionClient
-    private var isProbing = false
+    /// The probe running now; a second caller waits for it instead of probing twice.
+    private var inFlight: Task<ProbeSample, Never>?
 
     public init(client: ConnectionClient = .live, rules: QualityRules = .defaults, probeInterval: Duration = .seconds(10)) {
         self.client = client
@@ -90,14 +91,50 @@ public final class ConnectionMonitor {
         }
     }
 
-    /// Probes now. Skipped when a probe is already running.
+    /// Probes now. When a probe is already running, waits for its answer instead.
     public func recheck() async {
-        guard !isProbing else { return }
-        isProbing = true
-        defer { isProbing = false }
-        let sample = await client.probe()
+        _ = await probe()
+    }
+
+    /// For a click on the icon: an answer now, not after the interval. One probe
+    /// when it agrees with the status shown; when it does not, the probes the
+    /// rules need to confirm the change (3 failures, 2 successes) run at once,
+    /// side by side, instead of one per interval.
+    public func quickCheck() async {
+        let before = status
+        let first = await probe()
+        let confirms = before == .offline ? !first.isReachable : first.isReachable
+        guard !confirms else { return }
+        let needed = (before == .offline ? rules.successesToOnline : rules.failuresToOffline) - 1
+        guard needed > 0 else { return }
+        let client = client
+        let samples = await withTaskGroup(of: ProbeSample.self) { group in
+            for _ in 0..<needed {
+                group.addTask { await client.probe() }
+            }
+            var samples: [ProbeSample] = []
+            for await sample in group {
+                samples.append(sample)
+            }
+            return samples
+        }
+        for sample in samples {
+            evaluator.record(sample)
+        }
+        publish()
+    }
+
+    /// Probes and records the answer, or returns the answer of the probe already running.
+    private func probe() async -> ProbeSample {
+        if let inFlight { return await inFlight.value }
+        let client = client
+        let task = Task { await client.probe() }
+        inFlight = task
+        let sample = await task.value
+        inFlight = nil
         evaluator.record(sample)
         publish()
+        return sample
     }
 
     func handle(_ newPath: NetworkPath) async {

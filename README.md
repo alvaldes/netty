@@ -12,7 +12,7 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 
 - **Real internet, not just a network.** Netty asks Apple's captive portal check (with Google's as a fallback) whether the internet answers. Wi-Fi without internet or a hotel login page counts as offline.
 - **Green, yellow, red.** Yellow when latency, jitter or packet loss crosses a threshold; red after a few failed checks in a row. Every rule can be changed in Settings › Connection.
-- **Latency, jitter and loss** from a TCP handshake with 1.1.1.1 and 8.8.8.8 every 10 seconds, and right away whenever you open the popover or the network changes.
+- **Latency, jitter and loss** from a TCP handshake with 1.1.1.1 and 8.8.8.8 every 10 seconds, and right away whenever the network changes or you click the icon: a click confirms a drop or a recovery at once, with the checks the rules need run side by side instead of one per interval.
 - **Speed test** with Apple's built-in `networkQuality`: download, upload and responsiveness. It runs when you ask, or on a schedule (off by default; metered networks are skipped).
 - **Notifications** when the connection drops and when it comes back, with how long you were offline. A degraded connection never notifies, and Focus modes are respected.
 - **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, whether a VPN carries your traffic, and your local and public IP (click one to copy it).

@@ -26,6 +26,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         super.init()
 
         let opener = settingsOpener
+        // Settings opened from the popover's gear checks too.
+        opener.onOpen = { Task { [monitor] in await monitor.quickCheck() } }
         let content = PopoverContainer(settings: settings, monitor: monitor, speedTester: speedTester, location: location,
                                        publicAddress: publicAddress,
                                        openSettings: { [weak self] in
@@ -66,6 +68,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     // MARK: - Clicks
 
     @objc private func clicked() {
+        // Whatever the click opens shows a fresh answer, not the last interval's.
+        Task { [monitor] in await monitor.quickCheck() }
         let event = NSApp.currentEvent
         // A Control-click is a right click on a Mac.
         let isRight = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
@@ -125,9 +129,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     // MARK: - NSPopoverDelegate
 
-    /// Opening the popover is the re-check: it shows fresh numbers.
+    /// The click that opened the popover already ran a quick check.
     func popoverWillShow(_ notification: Notification) {
-        Task { await monitor.recheck() }
         Task { [monitor, publicAddress] in await publicAddress.refreshIfStale(path: monitor.path) }
     }
 
@@ -139,8 +142,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 /// Opens Settings in front, with the `openSettings` a view lent it.
 final class SettingsOpener {
     fileprivate var action: OpenSettingsAction?
+    var onOpen: () -> Void = {}
 
     func open() {
+        onOpen()
         // A menu bar agent is not active; bring the window to the front.
         NSApp.activate()
         action?()
@@ -192,6 +197,12 @@ extension StatusItemController {
     func checkClicksIfRequested() {
         guard let directory = ProcessInfo.processInfo.environment["NETTY_CHECK_CLICKS"] else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [self] in
+            Task { [monitor] in
+                let clock = ContinuousClock()
+                let start = clock.now
+                await monitor.quickCheck()
+                print("CHECK quick check:", monitor.status.map { "\($0)" } ?? "nil", "in", clock.now - start)
+            }
             perform(.showPopover)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [self] in
                 print("CHECK popover shown:", isPopoverVisible)
