@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The areas of the Settings window, in sidebar order.
 enum SettingsArea: String, CaseIterable, Identifiable {
-    case general, icon, connection, speedTest, notifications, permissions, about
+    case about, general, icon, connection, speedTest, notifications, permissions
 
     var id: Self { self }
 
@@ -39,7 +39,8 @@ struct SettingsView: View {
     let location: LocationPermission
     let notifications: NotificationPermission
 
-    @State var area: SettingsArea = .general
+    /// Every opening starts on About, as in JUMP.
+    @State var area: SettingsArea = .about
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -61,6 +62,7 @@ struct SettingsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .background(WindowChrome(title: "Netty"))
         .task { await notifications.refresh() }
+        .onDisappear { area = .about }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Back from System Settings.
             launchAtLogin.refresh()
