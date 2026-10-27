@@ -47,7 +47,8 @@ These terms have one meaning everywhere in the app and in the code.
    - Latency (ms), jitter (ms), loss (%).
    - Last speed test: ↓ Mbps / ↑ Mbps, responsiveness, and time of measurement.
    - Network: Wi-Fi name (SSID) or interface type (Ethernet, iPhone hotspot), VPN indicator.
-   - Actions: **Re-check now** (probes), **Run speed test**, Settings, Quit.
+   - Opening the popover probes immediately, so there is no re-check button.
+   - Actions: **Run speed test**, Settings, Quit.
 4. **Notifications** when the connection goes offline and when it comes back online. Each can be turned off. Degraded (Yellow) does not notify.
 5. **Settings:** quality rules (see §4.3), probe interval, speed test schedule, notifications, launch at login, menu bar icon (see §4.6).
 6. **Location permission onboarding**, required by macOS to read the Wi-Fi name. If denied, Netty still works and shows "Wi-Fi" without the name.

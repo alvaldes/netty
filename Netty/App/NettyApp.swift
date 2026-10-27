@@ -39,7 +39,7 @@ struct NettyApp: App {
             PopoverView(
                 model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location),
                 actions: PopoverActions(
-                    recheck: { Task { await monitor.recheck() } },
+                    opened: { Task { await monitor.recheck() } },
                     runSpeedTest: { Task { await speedTester.run() } },
                     requestWiFiName: { location.request() },
                     quit: { NSApplication.shared.terminate(nil) }
