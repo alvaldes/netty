@@ -66,11 +66,7 @@ private struct StatusHeader: View {
     private func subtitle(now: Date) -> String {
         var parts: [String] = []
         if let since = model.statusSince {
-            let seconds = max(0, now.timeIntervalSince(since).rounded())
-            // Seconds only matter during the first minute.
-            let units: Set<Duration.UnitsFormatStyle.Unit> = seconds < 60 ? [.seconds] : [.hours, .minutes]
-            parts.append("for " + Duration.seconds(seconds)
-                .formatted(.units(allowed: units, width: .abbreviated, maximumUnitCount: 2)))
+            parts.append("for " + StatusDuration.text(seconds: now.timeIntervalSince(since)))
         } else {
             parts.append("Testing the connection")
         }

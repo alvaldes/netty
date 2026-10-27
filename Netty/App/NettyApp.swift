@@ -6,6 +6,7 @@ struct NettyApp: App {
     @State private var monitor: ConnectionMonitor
     @State private var speedTester: SpeedTester
     @State private var location: LocationPermission
+    @State private var notifier: ConnectionNotifier
 
     init() {
         #if DEBUG
@@ -20,6 +21,9 @@ struct NettyApp: App {
         })
         let location = LocationPermission()
         location.onChange = { _ in monitor.refreshNetworkInfo() }
+        let notifier = ConnectionNotifier()
+        monitor.onStatusChange = { old, new, date in notifier.statusChanged(from: old, to: new, at: date) }
+        _notifier = State(initialValue: notifier)
         _monitor = State(initialValue: monitor)
         _speedTester = State(initialValue: speedTester)
         _location = State(initialValue: location)
@@ -27,6 +31,7 @@ struct NettyApp: App {
         Task { await monitor.run() }
         Task { await speedTester.runSchedule() }
         Task { await location.monitor() }
+        Task { await notifier.requestAuthorization() }
     }
 
     var body: some Scene {

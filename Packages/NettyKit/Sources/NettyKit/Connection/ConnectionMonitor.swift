@@ -49,6 +49,8 @@ public final class ConnectionMonitor {
     /// When the current status started.
     public private(set) var statusSince: Date?
     public var probeInterval: Duration
+    /// Called after the status changes, with the previous status and when it changed.
+    public var onStatusChange: ((ConnectionStatus?, ConnectionStatus?, Date) -> Void)?
     public var rules: QualityRules {
         get { evaluator.rules }
         set { evaluator.rules = newValue }
@@ -108,8 +110,10 @@ public final class ConnectionMonitor {
 
     private func publish() {
         if evaluator.status != status {
+            let old = status
             status = evaluator.status
             statusSince = client.now()
+            onStatusChange?(old, status, client.now())
         }
         metrics = evaluator.metrics
     }
