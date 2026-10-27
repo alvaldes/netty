@@ -1,3 +1,5 @@
+<img src="docs/assets/icon.png" width="128" alt="Netty app icon: a green dot with a soft halo on graphite">
+
 # Netty
 
 Your network companion in the macOS menu bar. A dot that tells you at a glance whether you are really on the internet, how good the connection is, and how fast it is.

@@ -55,20 +55,15 @@ struct SettingRow<Control: View>: View {
     }
 }
 
-/// Netty's mark: the status dot with its halo, as the popover shows it.
+/// Netty's app icon (Netty/Resources/AppIcon.icon), as Finder and the Dock show it.
 struct NettyMark: View {
     var size: CGFloat = 40
 
     var body: some View {
-        ZStack {
-            Circle().fill(Color.green.opacity(0.16))
-            Circle()
-                .fill(Color.green)
-                .frame(width: size * 0.4, height: size * 0.4)
-                .shadow(color: .green.opacity(0.8), radius: size * 0.14)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        Image(nsImage: NSApp?.applicationIconImage ?? NSImage())
+            .resizable()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }
 

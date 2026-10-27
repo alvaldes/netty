@@ -54,6 +54,8 @@ targets:
       base:
         PRODUCT_NAME: Netty
         PRODUCT_BUNDLE_IDENTIFIER: com.alvaldes.netty
+        # Netty/Resources/AppIcon.icon, made in Icon Composer.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         SWIFT_STRICT_CONCURRENCY: complete
