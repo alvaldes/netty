@@ -10,10 +10,12 @@ private final class FakeNetwork: Sendable {
     let allowedSleeps: Int
     let sleepCount = Mutex(0)
     let clock = Mutex(Date(timeIntervalSince1970: 0))
+    let wifiName: Mutex<String?>
 
-    init(samples: [ProbeSample] = [], allowedSleeps: Int = 0) {
+    init(samples: [ProbeSample] = [], allowedSleeps: Int = 0, wifiName: String? = nil) {
         self.samples = Mutex(samples)
         self.allowedSleeps = allowedSleeps
+        self.wifiName = Mutex(wifiName)
     }
 
     func advance(by seconds: TimeInterval) {
@@ -36,7 +38,8 @@ private final class FakeNetwork: Sendable {
                 let count = self.sleepCount.withLock { $0 += 1; return $0 }
                 if count > self.allowedSleeps { throw CancellationError() }
             },
-            now: { self.clock.withLock { $0 } }
+            now: { self.clock.withLock { $0 } },
+            wifiName: { self.wifiName.withLock { $0 } }
         )
     }
 }
@@ -135,5 +138,49 @@ struct ReachabilityProbeTests {
         let sample = await ConnectionClient.live.probe()
         #expect(sample.isReachable)
         #expect(sample.latency != nil)
+    }
+}
+
+@Suite("NetworkPath")
+struct NetworkPathTests {
+    @Test(arguments: ["utun0", "utun4", "ipsec0", "ppp0"])
+    func tunnelInterfacesAreVPN(name: String) {
+        #expect(NetworkPath.isTunnel(interfaceName: name))
+    }
+
+    @Test(arguments: ["en0", "en10", "bridge0", "awdl0", "lo0"])
+    func physicalInterfacesAreNotVPN(name: String) {
+        #expect(!NetworkPath.isTunnel(interfaceName: name))
+    }
+}
+
+@Suite("ConnectionMonitor network info")
+struct ConnectionMonitorNetworkInfoTests {
+    @Test func wifiPathReadsTheNetworkName() async {
+        let sut = ConnectionMonitor(client: FakeNetwork(wifiName: "Home").client())
+        await sut.handle(wifi)
+        #expect(sut.wifiName == "Home")
+    }
+
+    @Test func otherPathsHaveNoNetworkName() async {
+        let network = FakeNetwork(wifiName: "Home")
+        let sut = ConnectionMonitor(client: network.client())
+        await sut.handle(wifi)
+        await sut.handle(NetworkPath(isSatisfied: true, interface: .ethernet, isExpensive: false, isConstrained: false))
+        #expect(sut.wifiName == nil)
+        await sut.handle(wifi)
+        await sut.handle(noNetwork)
+        #expect(sut.wifiName == nil)
+    }
+
+    @Test func refreshRereadsTheNetworkName() async {
+        // Without Location access the name is nil; granting it later must show it.
+        let network = FakeNetwork(wifiName: nil)
+        let sut = ConnectionMonitor(client: network.client())
+        await sut.handle(wifi)
+        #expect(sut.wifiName == nil)
+        network.wifiName.withLock { $0 = "Home" }
+        sut.refreshNetworkInfo()
+        #expect(sut.wifiName == "Home")
     }
 }

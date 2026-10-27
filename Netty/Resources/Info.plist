@@ -37,5 +37,9 @@
 	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Netty contributors. GPL-3.0.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location.</string>
 </dict>
 </plist>

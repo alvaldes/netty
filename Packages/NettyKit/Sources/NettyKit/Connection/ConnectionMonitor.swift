@@ -7,17 +7,21 @@ nonisolated public struct ConnectionClient: Sendable {
     public var paths: @Sendable () -> AsyncStream<NetworkPath>
     public var sleep: @Sendable (Duration) async throws -> Void
     public var now: @Sendable () -> Date
+    /// The Wi-Fi network name; `nil` without Location access.
+    public var wifiName: @Sendable () -> String?
 
     public init(
         probe: @escaping @Sendable () async -> ProbeSample,
         paths: @escaping @Sendable () -> AsyncStream<NetworkPath>,
         sleep: @escaping @Sendable (Duration) async throws -> Void,
-        now: @escaping @Sendable () -> Date
+        now: @escaping @Sendable () -> Date,
+        wifiName: @escaping @Sendable () -> String?
     ) {
         self.probe = probe
         self.paths = paths
         self.sleep = sleep
         self.now = now
+        self.wifiName = wifiName
     }
 
     public static let live = ConnectionClient(
@@ -28,7 +32,8 @@ nonisolated public struct ConnectionClient: Sendable {
         },
         paths: { NetworkPath.updates() },
         sleep: { try await Task.sleep(for: $0) },
-        now: { Date() }
+        now: { Date() },
+        wifiName: { WiFiNetwork.currentName() }
     )
 }
 
@@ -39,6 +44,8 @@ public final class ConnectionMonitor {
     public private(set) var status: ConnectionStatus?
     public private(set) var metrics = QualityMetrics.empty
     public private(set) var path: NetworkPath?
+    /// The Wi-Fi network name, when on Wi-Fi and Location access is granted.
+    public private(set) var wifiName: String?
     /// When the current status started.
     public private(set) var statusSince: Date?
     public var probeInterval: Duration
@@ -87,10 +94,16 @@ public final class ConnectionMonitor {
     func handle(_ newPath: NetworkPath) async {
         path = newPath
         evaluator.pathChanged(isSatisfied: newPath.isSatisfied)
+        refreshNetworkInfo()
         publish()
         if newPath.isSatisfied {
             await recheck()
         }
+    }
+
+    /// Re-reads the Wi-Fi name, e.g. after Location access changes.
+    public func refreshNetworkInfo() {
+        wifiName = path.map { $0.isSatisfied && $0.interface == .wifi } == true ? client.wifiName() : nil
     }
 
     private func publish() {

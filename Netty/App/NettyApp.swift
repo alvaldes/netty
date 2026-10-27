@@ -5,6 +5,7 @@ import SwiftUI
 struct NettyApp: App {
     @State private var monitor: ConnectionMonitor
     @State private var speedTester: SpeedTester
+    @State private var location: LocationPermission
 
     init() {
         let monitor = ConnectionMonitor()
@@ -16,14 +17,18 @@ struct NettyApp: App {
         })
         _monitor = State(initialValue: monitor)
         _speedTester = State(initialValue: speedTester)
+        let location = LocationPermission()
+        location.onChange = { _ in monitor.refreshNetworkInfo() }
+        _location = State(initialValue: location)
         // Probe and keep the speed test schedule for the whole app lifetime.
         Task { await monitor.run() }
         Task { await speedTester.runSchedule() }
+        Task { await location.monitor() }
     }
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContent(monitor: monitor, speedTester: speedTester)
+            MenuContent(monitor: monitor, speedTester: speedTester, location: location)
         } label: {
             Image(systemName: monitor.status.symbolName)
         }
@@ -34,6 +39,7 @@ struct NettyApp: App {
 private struct MenuContent: View {
     let monitor: ConnectionMonitor
     let speedTester: SpeedTester
+    let location: LocationPermission
 
     var body: some View {
         Text(monitor.status.title)
@@ -46,12 +52,34 @@ private struct MenuContent: View {
             Text("↓ \(result.download, format: .number.precision(.fractionLength(1))) Mbps  ↑ \(result.upload, format: .number.precision(.fractionLength(1))) Mbps")
             Text("Measured \(result.date, format: .relative(presentation: .named))")
         }
+        if let network = networkDescription {
+            Text(network)
+        }
+        if monitor.path?.isVPN == true {
+            Text("VPN on")
+        }
         Divider()
+        if monitor.path?.interface == .wifi, location.status != .granted {
+            Button("Show Wi-Fi Name…") { location.request() }
+        }
         Button("Re-check Now") { Task { await monitor.recheck() } }
         Button("Run Speed Test") { Task { await speedTester.run() } }
             .disabled(speedTester.isRunning)
         Button("Quit Netty") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+}
+
+private extension MenuContent {
+    var networkDescription: String? {
+        guard let interface = monitor.path?.interface else { return nil }
+        return switch interface {
+        case .wifi: monitor.wifiName.map { "Wi-Fi: \($0)" } ?? "Wi-Fi"
+        case .ethernet: "Ethernet"
+        case .cellular: "Cellular"
+        case .other: "Other network"
+        case .none: nil
+        }
     }
 }
 

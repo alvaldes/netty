@@ -38,11 +38,18 @@ targets:
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: "Copyright © 2026 Netty contributors. GPL-3.0."
+        NSLocationUsageDescription: "macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location."
+        NSLocationWhenInUseUsageDescription: "macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location."
         # Apple's captive portal check is plain HTTP by design: a portal must be able to intercept it.
         NSAppTransportSecurity:
           NSExceptionDomains:
             captive.apple.com:
               NSExceptionAllowsInsecureHTTPLoads: true
+    entitlements:
+      path: Netty/Resources/Netty.entitlements
+      properties:
+        # Hardened runtime blocks Location Services, needed for the Wi-Fi name, without it.
+        com.apple.security.personal-information.location: true
     settings:
       base:
         PRODUCT_NAME: Netty
