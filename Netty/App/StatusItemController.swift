@@ -23,7 +23,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         super.init()
 
         let opener = settingsOpener
-        let content = PopoverContainer(monitor: monitor, speedTester: speedTester, location: location,
+        let content = PopoverContainer(settings: settings, monitor: monitor, speedTester: speedTester, location: location,
                                        openSettings: { [weak self] in
                                            self?.popover.close()
                                            opener.open()
@@ -158,6 +158,7 @@ private struct SettingsOpenerView: View {
 
 /// Feeds the popover from the live services.
 private struct PopoverContainer: View {
+    let settings: NettySettings
     let monitor: ConnectionMonitor
     let speedTester: SpeedTester
     let location: LocationPermission
@@ -165,7 +166,8 @@ private struct PopoverContainer: View {
 
     var body: some View {
         PopoverView(
-            model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location),
+            model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
+                                layout: settings.popoverLayout),
             actions: PopoverActions(
                 runSpeedTest: { Task { await speedTester.run() } },
                 requestWiFiName: { location.request() },

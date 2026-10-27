@@ -87,7 +87,11 @@ struct NettyApp: App {
 
         Settings {
             SettingsView(settings: settings, launchAtLogin: launchAtLogin, location: location,
-                         notifications: notificationPermission)
+                         notifications: notificationPermission,
+                         previewModel: { [monitor, speedTester, location, settings] in
+                             PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
+                                          layout: settings.popoverLayout)
+                         })
         }
     }
 }

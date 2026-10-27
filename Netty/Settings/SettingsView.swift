@@ -3,13 +3,14 @@ import SwiftUI
 
 /// The areas of the Settings window, in sidebar order.
 enum SettingsArea: String, CaseIterable, Identifiable {
-    case about, general, icon, connection, speedTest, notifications, permissions
+    case about, general, popover, icon, connection, speedTest, notifications, permissions
 
     var id: Self { self }
 
     var title: String {
         switch self {
         case .general: "General"
+        case .popover: "Popover"
         case .icon: "Menu Bar Icon"
         case .connection: "Connection"
         case .speedTest: "Speed Test"
@@ -22,6 +23,7 @@ enum SettingsArea: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .general: "gearshape"
+        case .popover: "rectangle.stack"
         case .icon: "circle.dotted.circle"
         case .connection: "dot.radiowaves.left.and.right"
         case .speedTest: "speedometer"
@@ -38,6 +40,7 @@ struct SettingsView: View {
     let launchAtLogin: LaunchAtLogin
     let location: LocationPermission
     let notifications: NotificationPermission
+    let previewModel: () -> PopoverModel
 
     /// Every opening starts on About, as in JUMP.
     @State var area: SettingsArea = .about
@@ -58,7 +61,7 @@ struct SettingsView: View {
         }
         // The content runs under the transparent title bar.
         .ignoresSafeArea()
-        .frame(width: 760, height: 540 + WindowChrome.titleBarHeight)
+        .frame(width: 880, height: 540 + WindowChrome.titleBarHeight)
         .background(Color(nsColor: .windowBackgroundColor))
         .background(WindowChrome(title: "Netty"))
         .task { await notifications.refresh() }
@@ -74,6 +77,7 @@ struct SettingsView: View {
     private var pane: some View {
         switch area {
         case .general: GeneralSettings(launchAtLogin: launchAtLogin)
+        case .popover: PopoverSettings(settings: settings, previewModel: previewModel)
         case .icon: IconSettings(settings: settings)
         case .connection: ConnectionSettings(settings: settings)
         case .speedTest: SpeedTestSettings(settings: settings)

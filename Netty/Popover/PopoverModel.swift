@@ -15,6 +15,8 @@ struct PopoverModel {
     var wifiName: String?
     /// Wi-Fi is up but its name is hidden until Location access is granted.
     var canRequestWiFiName = false
+    /// Which sections show, in which order.
+    var layout = PopoverLayout.defaults
 
     var isOnline: Bool { status == .online || status == .degraded }
 }
@@ -28,7 +30,7 @@ struct PopoverActions {
 }
 
 extension PopoverModel {
-    init(monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission) {
+    init(monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission, layout: PopoverLayout) {
         self.init(
             status: monitor.status,
             statusSince: monitor.statusSince,
@@ -39,7 +41,8 @@ extension PopoverModel {
             speedTestFailed: speedTester.lastError != nil,
             path: monitor.path,
             wifiName: monitor.wifiName,
-            canRequestWiFiName: monitor.path?.interface == .wifi && location.status != .granted
+            canRequestWiFiName: monitor.path?.interface == .wifi && location.status != .granted,
+            layout: layout
         )
     }
 }

@@ -8,12 +8,27 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            StatusHeader(model: model, openSettings: actions.openSettings)
-            MetricsRow(model: model)
-            SpeedCard(model: model, runSpeedTest: actions.runSpeedTest)
-            NetworkRow(model: model, requestWiFiName: actions.requestWiFiName)
-            Divider()
+            ForEach(model.layout.visibleSections, id: \.self) { section in
+                switch section {
+                case .status: StatusHeader(model: model, openSettings: actions.openSettings)
+                case .quality: MetricsRow(model: model)
+                case .speed: SpeedCard(model: model, runSpeedTest: actions.runSpeedTest)
+                case .network: NetworkRow(model: model, requestWiFiName: actions.requestWiFiName)
+                }
+            }
+            if !model.layout.visibleSections.isEmpty {
+                Divider()
+            }
             HStack {
+                // The status section holds the Settings button; without it, Settings moves here.
+                if !model.layout.isVisible(.status) {
+                    Button("Settings…", action: actions.openSettings)
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .keyboardShortcut(",")
+                        .focusEffectDisabled()
+                }
                 Spacer()
                 Button("Quit Netty", action: actions.quit)
                     .buttonStyle(.plain)

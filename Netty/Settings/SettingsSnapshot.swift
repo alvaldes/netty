@@ -20,7 +20,7 @@ enum SettingsSnapshot {
             for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
                 let view = SettingsView(settings: settings, launchAtLogin: LaunchAtLogin(),
                                         location: LocationPermission(), notifications: NotificationPermission(),
-                                        area: area)
+                                        previewModel: { PopoverSnapshot.samples[0].1 }, area: area)
                 render(view, appearance: appearance, to: output.appending(path: "\(area.rawValue)-\(name).png"))
             }
         }
@@ -35,7 +35,7 @@ enum SettingsSnapshot {
     }
 
     private static func render(_ view: some View, appearance: NSAppearance.Name,
-                               size: CGSize = CGSize(width: 760, height: 568), to url: URL) {
+                               size: CGSize = CGSize(width: 880, height: 568), to url: URL) {
         let hosting = NSHostingView(rootView: view)
         hosting.frame = CGRect(origin: .zero, size: size)
         let window = NSWindow(contentRect: hosting.frame, styleMask: [.titled], backing: .buffered, defer: false)

@@ -16,6 +16,8 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 - **Speed test** with Apple's built-in `networkQuality`: download, upload and responsiveness. It runs when you ask, or on a schedule (off by default; metered networks are skipped).
 - **Notifications** when the connection drops and when it comes back, with how long you were offline. A degraded connection never notifies, and Focus modes are respected.
 - **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, and whether a VPN carries your traffic.
+- **Your popover, your order:** show, hide and drag its sections (Status, Quality, Speed, Network) in Settings › Popover, with a live preview.
+- **Left and right click:** each opens the popover, a quick menu (Settings, Quit), a speed test or Settings, as you choose.
 - **Menu bar icon your way:** color or black & white, a glyph per status (`● ◍ ◌ ◉ …`, SF Symbols or your own SVG, PDF or PNG) and its size.
 
 | Menu Bar Icon | Connection |

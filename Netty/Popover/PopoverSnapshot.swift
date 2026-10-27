@@ -21,7 +21,7 @@ enum PopoverSnapshot {
         exit(0)
     }
 
-    private static var samples: [(String, PopoverModel)] {
+    static var samples: [(String, PopoverModel)] {
         let speed = SpeedTestResult(download: 9.2, upload: 19.5, responsiveness: 61, bytesTransferred: 43_000_000,
                                     date: .now.addingTimeInterval(-12 * 60))
         let wifi = NetworkPath(isSatisfied: true, interface: .wifi, isExpensive: false, isConstrained: false)
@@ -41,7 +41,11 @@ enum PopoverSnapshot {
         offline.wifiName = nil
         offline.canRequestWiFiName = true
         offline.lastSpeed = nil
-        return [("online", online), ("degraded", degraded), ("offline", offline)]
+        var custom = online
+        custom.layout.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        custom.layout.setVisible(false, for: .status)
+        custom.layout.setVisible(false, for: .quality)
+        return [("online", online), ("degraded", degraded), ("offline", offline), ("custom-layout", custom)]
     }
 
     private static func render(_ view: some View, appearance: NSAppearance.Name, to url: URL) {
