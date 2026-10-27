@@ -82,9 +82,21 @@ nonisolated public struct QualityMetrics: Sendable, Equatable {
         return sorted.count.isMultiple(of: 2) ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
     }
 
-    func isDegraded(under rules: QualityRules) -> Bool {
-        if let latency, latency >= rules.latencyThreshold { return true }
-        if let jitter, jitter >= rules.jitterThreshold { return true }
-        return loss >= rules.lossThreshold
+    /// The thresholds these metrics cross, in display order.
+    public func degradedReasons(under rules: QualityRules) -> [DegradedReason] {
+        var reasons: [DegradedReason] = []
+        if let latency, latency >= rules.latencyThreshold { reasons.append(.latency) }
+        if let jitter, jitter >= rules.jitterThreshold { reasons.append(.jitter) }
+        if loss >= rules.lossThreshold { reasons.append(.loss) }
+        return reasons
     }
+
+    func isDegraded(under rules: QualityRules) -> Bool {
+        !degradedReasons(under: rules).isEmpty
+    }
+}
+
+/// Which threshold made the connection degraded.
+nonisolated public enum DegradedReason: Sendable, Equatable {
+    case latency, jitter, loss
 }

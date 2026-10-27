@@ -212,3 +212,25 @@ struct QualityEvaluatorTests {
         #expect(sut.metrics == QualityMetrics(latency: nil, jitter: nil, loss: 0))
     }
 }
+
+@Suite("QualityMetrics degraded reasons")
+struct DegradedReasonTests {
+    @Test func cleanMetricsHaveNoReason() {
+        let metrics = QualityMetrics(latency: 20, jitter: 3, loss: 0)
+        #expect(metrics.degradedReasons(under: .defaults).isEmpty)
+    }
+
+    @Test func eachCrossedThresholdIsAReason() {
+        let metrics = QualityMetrics(latency: 150, jitter: 50, loss: 0.2)
+        #expect(metrics.degradedReasons(under: .defaults) == [.latency, .jitter, .loss])
+    }
+
+    @Test func onlyTheCrossedThresholdIsReported() {
+        let metrics = QualityMetrics(latency: 20, jitter: 80, loss: 0)
+        #expect(metrics.degradedReasons(under: .defaults) == [.jitter])
+    }
+
+    @Test func missingSamplesAreNotAReason() {
+        #expect(QualityMetrics.empty.degradedReasons(under: .defaults).isEmpty)
+    }
+}
