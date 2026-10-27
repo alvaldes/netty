@@ -40,7 +40,7 @@ enum SettingsSnapshot {
         }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             let view = OnboardingView(settings: settings, location: LocationPermission(),
-                                      notifications: NotificationPermission(), requestNotifications: {})
+                                      notifications: NotificationPermission(), requestNotifications: {}, close: {})
                 .background(Color(nsColor: .windowBackgroundColor))
             render(view, appearance: appearance, size: CGSize(width: 440, height: 560),
                    to: output.appending(path: "onboarding-\(name).png"))

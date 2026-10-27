@@ -11,7 +11,7 @@ struct NettyApp: App {
     @State private var notifier: ConnectionNotifier
     @State private var publicAddress: PublicAddress
     @State private var launchAtLogin = LaunchAtLogin()
-    @State private var notificationPermission = NotificationPermission()
+    @State private var notificationPermission: NotificationPermission
     private let statusItem = StatusItemHolder()
 
     init() {
@@ -23,6 +23,12 @@ struct NettyApp: App {
         MenuBarSnapshot.captureIfRequested()
         // Snapshot runs must not touch the user's settings.
         if MenuBarSnapshot.requestedStyle != nil, let volatile = UserDefaults(suiteName: "com.alvaldes.netty.snapshot") {
+            defaults = volatile
+        }
+        // Shows the welcome window as on a first launch, on throwaway settings.
+        if ProcessInfo.processInfo.environment["NETTY_FIRST_LAUNCH"] != nil,
+           let volatile = UserDefaults(suiteName: "com.alvaldes.netty.first-launch") {
+            volatile.removePersistentDomain(forName: "com.alvaldes.netty.first-launch")
             defaults = volatile
         }
         #endif
@@ -61,9 +67,15 @@ struct NettyApp: App {
         _location = State(initialValue: location)
         _notifier = State(initialValue: notifier)
         _publicAddress = State(initialValue: publicAddress)
+        let permission = NotificationPermission()
+        _notificationPermission = State(initialValue: permission)
         // The status bar takes items once the app has finished launching.
         let holder = statusItem
         DispatchQueue.main.async {
+            if !settings.hasCompletedOnboarding {
+                holder.welcome.show(settings: settings, location: location, notifications: permission,
+                                    requestNotifications: { await notifier.requestAuthorization() })
+            }
             holder.controller = StatusItemController(settings: settings, monitor: monitor,
                                                      speedTester: speedTester, location: location,
                                                      publicAddress: publicAddress)
@@ -83,13 +95,6 @@ struct NettyApp: App {
     }
 
     var body: some Scene {
-        Window("Welcome to Netty", id: OnboardingView.windowID) {
-            OnboardingView(settings: settings, location: location, notifications: notificationPermission,
-                           requestNotifications: { await notifier.requestAuthorization() })
-        }
-        .windowResizability(.contentSize)
-        .defaultLaunchBehavior(settings.hasCompletedOnboarding ? .suppressed : .presented)
-
         Settings {
             SettingsView(settings: settings, launchAtLogin: launchAtLogin, location: location,
                          notifications: notificationPermission,
@@ -110,4 +115,5 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 /// Keeps the menu bar item alive for the app's lifetime.
 private final class StatusItemHolder {
     var controller: StatusItemController?
+    let welcome = WelcomeWindowController()
 }
