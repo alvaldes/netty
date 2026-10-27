@@ -77,7 +77,8 @@
     }
 
     /* Navigation */
-    .nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); background: rgba(21, 23, 26, 0.82); border-bottom: 1px solid var(--hairline); }
+    /* Glass: a light fill and a strong blur. The blur, not the fill, keeps the links readable over what passes under. */
+    .nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); background: rgba(21, 23, 26, 0.55); border-bottom: 1px solid var(--hairline); }
     .nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; font-size: 17px; }
     .brand img { width: 30px; height: 30px; }
