@@ -1,0 +1,55 @@
+name: Netty
+
+options:
+  bundleIdPrefix: com.alvaldes
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  NettyKit:
+    path: Packages/NettyKit
+
+targets:
+  Netty:
+    type: application
+    platform: macOS
+    sources:
+      - Netty
+    dependencies:
+      - package: NettyKit
+    info:
+      path: Netty/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Netty
+        # XcodeGen otherwise writes 1.0 (1); the version lives in the build settings above.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: "Copyright © 2026 Netty contributors. GPL-3.0."
+    settings:
+      base:
+        PRODUCT_NAME: Netty
+        PRODUCT_BUNDLE_IDENTIFIER: com.alvaldes.netty
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_STRICT_CONCURRENCY: complete
+
+schemes:
+  Netty:
+    build:
+      targets:
+        Netty: all
+    run:
+      config: Debug
