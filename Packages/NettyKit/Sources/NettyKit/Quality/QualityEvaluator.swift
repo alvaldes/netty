@@ -1,6 +1,6 @@
 /// Turns probe samples and path changes into a connection status, with hysteresis
 /// so the LED does not flicker on a single bad probe.
-public struct QualityEvaluator: Sendable {
+nonisolated public struct QualityEvaluator: Sendable {
     /// `nil` until the first probe or path change decides it.
     public private(set) var status: ConnectionStatus?
     public var rules: QualityRules

@@ -1,5 +1,5 @@
 /// How the connection looks to the user: the menu bar LED.
-public enum ConnectionStatus: Sendable, Equatable {
+nonisolated public enum ConnectionStatus: Sendable, Equatable {
     /// Online, good quality (green).
     case online
     /// Online, but latency, jitter or loss crossed a threshold (yellow).
@@ -9,7 +9,7 @@ public enum ConnectionStatus: Sendable, Equatable {
 }
 
 /// The result of one probe round.
-public struct ProbeSample: Sendable, Equatable {
+nonisolated public struct ProbeSample: Sendable, Equatable {
     /// The reachability probe got the expected answer from the internet.
     public var isReachable: Bool
     /// Latency probe round-trip in milliseconds; `nil` when that probe failed.
@@ -23,7 +23,7 @@ public struct ProbeSample: Sendable, Equatable {
 }
 
 /// User-adjustable thresholds that turn probe samples into a status.
-public struct QualityRules: Sendable, Equatable, Codable {
+nonisolated public struct QualityRules: Sendable, Equatable, Codable {
     /// Number of recent samples the metrics are computed over.
     public var windowSize = 6
     /// Median latency, in milliseconds, at or above which the connection is degraded.
@@ -45,7 +45,7 @@ public struct QualityRules: Sendable, Equatable, Codable {
 }
 
 /// Connection quality over the current window.
-public struct QualityMetrics: Sendable, Equatable {
+nonisolated public struct QualityMetrics: Sendable, Equatable {
     /// Median latency in milliseconds; `nil` without latency samples.
     public var latency: Double?
     /// Mean absolute difference between consecutive latencies; `nil` with fewer than two.
@@ -59,7 +59,7 @@ public struct QualityMetrics: Sendable, Equatable {
         self.loss = loss
     }
 
-    static let empty = QualityMetrics(latency: nil, jitter: nil, loss: 0)
+    public static let empty = QualityMetrics(latency: nil, jitter: nil, loss: 0)
 
     init(samples: [ProbeSample]) {
         guard !samples.isEmpty else {

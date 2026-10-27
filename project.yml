@@ -38,6 +38,11 @@ targets:
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: "Copyright © 2026 Netty contributors. GPL-3.0."
+        # Apple's captive portal check is plain HTTP by design: a portal must be able to intercept it.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            captive.apple.com:
+              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
         PRODUCT_NAME: Netty
