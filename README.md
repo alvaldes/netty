@@ -36,7 +36,7 @@ Netty needs macOS 26 or later.
    brew install --cask alvaldes/tap/netty
    ```
 
-2. Open Netty. It isn't notarized by Apple yet, so macOS stops it the first time: choose **Done**, then open System Settings › Privacy & Security and click **Open Anyway** next to “Netty.app” was blocked.
+2. Open Netty. It isn't notarized by Apple yet, so macOS stops it the first time: choose **Done**, then open System Settings › Privacy & Security and click **Open Anyway** next to “Netty.app” was blocked. The [step-by-step guide](https://alvaldes.vercel.app/en/blog/open-unnotarized-mac-apps/) has screenshots.
 3. The welcome window explains and asks for the two optional permissions.
 
 ## Permissions
