@@ -176,6 +176,7 @@
     .steps li::before { content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--glass); font-weight: 600; margin-bottom: 14px; }
     .steps h3 { font-size: 19px; font-weight: 600; }
     .steps p { margin: 8px 0 0; color: var(--text-2); font-size: 16px; }
+    .command { display: block; margin-top: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--glass); font: 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; user-select: all; }
 
     /* FAQ */
     .faq { margin-top: 36px; max-width: 760px; }
@@ -369,7 +370,8 @@
         <ol class="steps">
           <li>
             <h3>Download</h3>
-            <p>Open <a href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Netty.dmg</a> and drag Netty to Applications.</p>
+            <p>Open <a href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Netty.dmg</a> and drag Netty to Applications, or use Homebrew:</p>
+            <code class="command">brew install --cask alvaldes/tap/netty</code>
           </li>
           <li>
             <h3>Open it once</h3>

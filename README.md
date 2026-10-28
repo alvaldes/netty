@@ -30,7 +30,12 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 
 Netty needs macOS 26 or later.
 
-1. Download `Netty.dmg` from the latest release, open it and drag Netty to Applications.
+1. Download `Netty.dmg` from the latest release, open it and drag Netty to Applications. Or install it with [Homebrew](https://brew.sh):
+
+   ```sh
+   brew install --cask alvaldes/tap/netty
+   ```
+
 2. Open Netty. It isn't notarized by Apple yet, so macOS stops it the first time: choose **Done**, then open System Settings › Privacy & Security and click **Open Anyway** next to “Netty.app” was blocked.
 3. The welcome window explains and asks for the two optional permissions.
 
