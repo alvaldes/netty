@@ -3,7 +3,8 @@
 # dist/Netty.dmg. The name never changes so the website can link to
 # releases/latest/download/Netty.dmg; the volume name carries the version.
 # With --upload it also attaches the .dmg to the GitHub release for that tag,
-# creating the release if it does not exist.
+# creating the release if it does not exist, and points the Homebrew cask in
+# alvaldes/homebrew-tap at it.
 #
 # Usage: scripts/release.sh [--upload]
 #
@@ -58,9 +59,10 @@ dmg="dist/Netty.dmg"
 hdiutil create -quiet -volname "Netty $version" -srcfolder "$work/dmg" -ov -format UDZO "$dmg"
 hdiutil verify -quiet "$dmg"
 
+sha="$(shasum -a 256 "$dmg" | cut -d' ' -f1)"
 echo "$dmg"
 echo "  signed by: $authority"
-echo "  sha256:    $(shasum -a 256 "$dmg" | cut -d' ' -f1)"
+echo "  sha256:    $sha"
 
 if $upload; then
   if gh release view "$tag" >/dev/null 2>&1; then
@@ -70,4 +72,24 @@ if $upload; then
     gh release create "$tag" "$dmg" --title "Netty $version" --generate-notes --verify-tag
   fi
   echo "Uploaded to release $tag."
+
+  # The cask pins the .dmg's sha256, so it must follow every upload, even a
+  # rebuild of the same version.
+  cask="repos/alvaldes/homebrew-tap/contents/Casks/netty.rb"
+  cask_sha="$(gh api "$cask" -q .sha)"
+  gh api "$cask" -q .content | base64 -D > "$work/netty.rb"
+  sed -E -e "s/^  version \".*\"$/  version \"$version\"/" \
+         -e "s/^  sha256 \".*\"$/  sha256 \"$sha\"/" "$work/netty.rb" > "$work/netty.new.rb"
+  if ! grep -qx "  version \"$version\"" "$work/netty.new.rb" || ! grep -qx "  sha256 \"$sha\"" "$work/netty.new.rb"; then
+    echo "error: could not find the version and sha256 lines in Casks/netty.rb" >&2; exit 1
+  fi
+  if cmp -s "$work/netty.rb" "$work/netty.new.rb"; then
+    echo "The Homebrew cask is already up to date."
+  else
+    gh api -X PUT "$cask" --silent \
+      -f message="chore: update netty to $version" \
+      -f content="$(base64 < "$work/netty.new.rb")" \
+      -f sha="$cask_sha"
+    echo "Updated the Homebrew cask to $version."
+  fi
 fi
