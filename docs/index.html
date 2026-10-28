@@ -176,7 +176,14 @@
     .steps li::before { content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--glass); font-weight: 600; margin-bottom: 14px; }
     .steps h3 { font-size: 19px; font-weight: 600; }
     .steps p { margin: 8px 0 0; color: var(--text-2); font-size: 16px; }
-    .command { display: block; margin-top: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--glass); font: 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; user-select: all; }
+    .command { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 6px 6px 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--glass); }
+    .command code { flex: 1; min-width: 0; font: 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; user-select: all; }
+    .copy { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--text-2); cursor: pointer; transition: background-color 0.15s, color 0.15s; }
+    .copy:hover { background: var(--hairline); color: var(--text); }
+    .copy svg { width: 16px; height: 16px; }
+    .copy .done, .copy.copied .ready { display: none; }
+    .copy.copied .done { display: block; }
+    .copy.copied { color: var(--green); }
 
     /* FAQ */
     .faq { margin-top: 36px; max-width: 760px; }
@@ -371,7 +378,13 @@
           <li>
             <h3>Download</h3>
             <p>Open <a href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg">Netty.dmg</a> and drag Netty to Applications, or use Homebrew:</p>
-            <code class="command">brew install --cask alvaldes/tap/netty</code>
+            <div class="command">
+              <code id="brew-command">brew install --cask alvaldes/tap/netty</code>
+              <button class="copy" type="button" aria-label="Copy command" title="Copy command" data-copy="brew-command">
+                <svg class="ready" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg>
+                <svg class="done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>
+              </button>
+            </div>
           </li>
           <li>
             <h3>Open it once</h3>
@@ -515,6 +528,26 @@
       addEventListener("offline", render);
       run();
     })();
+
+    // Copy buttons: copy the text of the element they name.
+    for (const button of document.querySelectorAll("[data-copy]")) {
+      let reset;
+      button.addEventListener("click", async () => {
+        const text = document.getElementById(button.dataset.copy).textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          return;
+        }
+        button.classList.add("copied");
+        button.setAttribute("aria-label", "Copied");
+        clearTimeout(reset);
+        reset = setTimeout(() => {
+          button.classList.remove("copied");
+          button.setAttribute("aria-label", "Copy command");
+        }, 1600);
+      });
+    }
   </script>
 </body>
 </html>
