@@ -81,7 +81,7 @@ Debug builds render PNGs and quit:
 
 ## Release
 
-`scripts/release.sh` builds the signed Release app for the version in `project.yml`, refuses a dirty tree or an untagged HEAD, and packs `dist/Netty.dmg`. `--upload` attaches it to the GitHub release for that tag and updates the version and sha256 of the Homebrew cask in [alvaldes/homebrew-tap](https://github.com/alvaldes/homebrew-tap).
+`scripts/release.sh` builds the signed Release app for the version in `project.yml`, refuses a dirty tree or an untagged HEAD, and packs `dist/Netty.dmg`. `--upload` attaches it to the GitHub release for that tag, sets the release notes to the version's section of [CHANGELOG.md](CHANGELOG.md) (the script stops if there is none), and updates the version and sha256 of the Homebrew cask in [alvaldes/homebrew-tap](https://github.com/alvaldes/homebrew-tap).
 
 ## License
 
