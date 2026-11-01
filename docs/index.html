@@ -357,6 +357,7 @@
 
         <ul class="also">
           <li><strong>Notifications</strong> when the connection drops and when it comes back, with how long you were offline. Focus modes are respected.</li>
+          <li><strong>Update notices:</strong> Netty tells you when a new version is out and what it brings, every day or on the schedule you pick.</li>
           <li><strong>Network details:</strong> the Wi-Fi name, whether a VPN carries your traffic, and your local and public IP. Click an address to copy it.</li>
           <li><strong>Launch at login,</strong> so the dot is there whenever your Mac is.</li>
           <li><strong>Native and light:</strong> built in Swift for macOS 26, with the look of the system around it.</li>
@@ -373,6 +374,7 @@
             <li><span>Apple and Google</span><span>Their captive portal pages, to see whether the internet answers.</span></li>
             <li><span>Cloudflare 1.1.1.1</span><span>A handshake to time the latency, and your public IP, looked up only while the popover shows it.</span></li>
             <li><span>Apple's speed test servers</span><span>Only when a speed test runs.</span></li>
+            <li><span>GitHub</span><span>The latest Netty release, to tell you about a new version. Once a day by default; turn it off in Settings.</span></li>
           </ul>
           <p class="never">No analytics, no telemetry, no account.</p>
         </div>
@@ -433,6 +435,10 @@
           <details>
             <summary>Which Macs does it run on?</summary>
             <p>Any Mac with macOS 26 or later.</p>
+          </details>
+          <details>
+            <summary>How do I update Netty?</summary>
+            <p>Netty lets you know when a new version is out. With Homebrew, run <code>brew upgrade --cask netty</code>. Otherwise download the new Netty.dmg and replace the app in Applications.</p>
           </details>
         </div>
       </div>
