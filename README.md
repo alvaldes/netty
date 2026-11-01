@@ -4,7 +4,7 @@
 
 Your network companion in the macOS menu bar. A dot that tells you at a glance whether you are really on the internet, how good the connection is, and how fast it is.
 
-> Status: v1.0.0 (not yet notarized). See [`idea.md`](idea.md) for the design spec.
+> Status: v1.1.0 (not yet notarized). See [`idea.md`](idea.md) for the design spec.
 
 | Online | Degraded |
 |---|---|
