@@ -4,6 +4,12 @@
 
 Your network companion in the macOS menu bar. A dot that tells you at a glance whether you are really on the internet, how good the connection is, and how fast it is.
 
+<p>
+  <a href="https://alvaldes.github.io/netty/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/website-dark.svg"><img alt="Visit the website" width="250" height="54" src="docs/assets/badges/website-light.svg"></picture></a>
+  <a href="https://github.com/alvaldes/netty/releases/latest/download/Netty.dmg"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/download-dark.svg"><img alt="Download for macOS" width="250" height="54" src="docs/assets/badges/download-light.svg"></picture></a>
+  <a href="https://www.producthunt.com/products/netty?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-netty"><picture><source media="(prefers-color-scheme: dark)" srcset="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1299911&amp;theme=dark&amp;t=1793569209201"><img alt="Netty - A menu bar dot that tells you if you're really online | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1299911&amp;theme=light&amp;t=1793569209201"></picture></a>
+</p>
+
 > Status: v1.1.0 (not yet notarized). See [`idea.md`](idea.md) for the design spec.
 
 | Online | Degraded |
