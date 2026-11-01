@@ -6,7 +6,7 @@ update notification and in Settings › General. Keep each bullet one short line
 about what a user gets. Write the next version's bullets under `## Unreleased`,
 then rename the heading to the version before tagging.
 
-## Unreleased
+## 1.1.0
 
 - Update notices: Netty tells you when a new version is out, with what it brings
 - Choose how often to check for updates, or check by hand, in Settings › General
