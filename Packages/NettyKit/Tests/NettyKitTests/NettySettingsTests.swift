@@ -59,6 +59,7 @@ struct NettySettingsTests {
         #expect(sut.skipsMeteredNetworks)
         #expect(sut.notifiesWhenOffline)
         #expect(sut.notifiesWhenBackOnline)
+        #expect(sut.updateCheckSchedule == .daily)
         #expect(sut.iconStyle == .defaults)
     }
 
@@ -73,6 +74,7 @@ struct NettySettingsTests {
         sut.skipsMeteredNetworks = false
         sut.notifiesWhenOffline = false
         sut.notifiesWhenBackOnline = false
+        sut.updateCheckSchedule = .weekly
         var icon = MenuBarIconStyle.defaults
         icon.mode = .monochrome
         icon.size = 16
@@ -85,6 +87,7 @@ struct NettySettingsTests {
         #expect(!relaunched.skipsMeteredNetworks)
         #expect(!relaunched.notifiesWhenOffline)
         #expect(!relaunched.notifiesWhenBackOnline)
+        #expect(relaunched.updateCheckSchedule == .weekly)
         #expect(relaunched.iconStyle == icon)
     }
 

@@ -29,6 +29,15 @@ struct PopoverView: View {
                         .keyboardShortcut(",")
                         .focusEffectDisabled()
                 }
+                if let version = model.availableUpdate {
+                    Button(action: actions.openUpdate) {
+                        Label("Netty \(version) is available", systemImage: "arrow.down.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.tint)
+                    .focusEffectDisabled()
+                }
                 Spacer()
                 Button("Quit Netty", action: actions.quit)
                     .buttonStyle(.plain)

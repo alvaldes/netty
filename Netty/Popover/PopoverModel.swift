@@ -21,6 +21,8 @@ struct PopoverModel {
     var publicAddress: String?
     /// Which sections show, in which order.
     var layout = PopoverLayout.defaults
+    /// A newer Netty, found by the update checker.
+    var availableUpdate: String?
 
     var isOnline: Bool { status == .online || status == .degraded }
 }
@@ -30,12 +32,13 @@ struct PopoverActions {
     var runSpeedTest: () -> Void = {}
     var requestWiFiName: () -> Void = {}
     var openSettings: () -> Void = {}
+    var openUpdate: () -> Void = {}
     var quit: () -> Void = {}
 }
 
 extension PopoverModel {
     init(monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission,
-         publicAddress: PublicAddress, layout: PopoverLayout) {
+         publicAddress: PublicAddress, layout: PopoverLayout, updates: UpdateChecker? = nil) {
         self.init(
             status: monitor.status,
             statusSince: monitor.statusSince,
@@ -49,7 +52,8 @@ extension PopoverModel {
             canRequestWiFiName: monitor.path?.interface == .wifi && location.status != .granted,
             localAddress: monitor.localAddress,
             publicAddress: publicAddress.address,
-            layout: layout
+            layout: layout,
+            availableUpdate: updates?.available?.version
         )
     }
 }

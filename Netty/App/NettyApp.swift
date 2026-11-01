@@ -10,6 +10,7 @@ struct NettyApp: App {
     @State private var location: LocationPermission
     @State private var notifier: ConnectionNotifier
     @State private var publicAddress: PublicAddress
+    @State private var updates: UpdateChecker
     @State private var launchAtLogin = LaunchAtLogin()
     @State private var notificationPermission: NotificationPermission
     private let statusItem = StatusItemHolder()
@@ -47,6 +48,22 @@ struct NettyApp: App {
         location.onChange = { _ in monitor.refreshNetworkInfo() }
         let notifier = ConnectionNotifier()
         let publicAddress = PublicAddress()
+        var updateClient = UpdateClient.live
+        #if DEBUG
+        // Pretends GitHub has a newer release: NETTY_FAKE_UPDATE=<version>.
+        if let version = ProcessInfo.processInfo.environment["NETTY_FAKE_UPDATE"] {
+            let release = AppRelease(
+                version: version,
+                pageURL: URL(string: "https://github.com/alvaldes/netty/releases")!,
+                highlights: ["Update notices with what each version brings",
+                             "Choose how often Netty checks for updates",
+                             "A badge next to the version when a new one is out",
+                             "Install and upgrade with Homebrew"]
+            )
+            updateClient = UpdateClient(fetchLatest: { release }, now: { Date() })
+        }
+        #endif
+        let updates = UpdateChecker(currentVersion: AppVersion.short, client: updateClient, defaults: defaults)
         monitor.onStatusChange = { old, new, date in notifier.statusChanged(from: old, to: new, at: date) }
 
         func apply() {
@@ -57,6 +74,7 @@ struct NettyApp: App {
             notifier.notifiesWhenOffline = settings.notifiesWhenOffline
             notifier.notifiesWhenBackOnline = settings.notifiesWhenBackOnline
             publicAddress.isEnabled = settings.showsPublicIP
+            updates.schedule = settings.updateCheckSchedule
         }
         apply()
         settings.onChange = apply
@@ -67,6 +85,7 @@ struct NettyApp: App {
         _location = State(initialValue: location)
         _notifier = State(initialValue: notifier)
         _publicAddress = State(initialValue: publicAddress)
+        _updates = State(initialValue: updates)
         let permission = NotificationPermission()
         _notificationPermission = State(initialValue: permission)
         // The status bar takes items once the app has finished launching.
@@ -78,7 +97,7 @@ struct NettyApp: App {
             }
             holder.controller = StatusItemController(settings: settings, monitor: monitor,
                                                      speedTester: speedTester, location: location,
-                                                     publicAddress: publicAddress)
+                                                     publicAddress: publicAddress, updates: updates)
             #if DEBUG
             holder.controller?.checkClicksIfRequested()
             #endif
@@ -87,6 +106,7 @@ struct NettyApp: App {
         Task { await monitor.run() }
         Task { await speedTester.runSchedule() }
         Task { await location.monitor() }
+        Task { await updates.run() }
         // The first launch asks in the welcome window, with the reason; later
         // launches only register Netty's presenter (no prompt once decided).
         if settings.hasCompletedOnboarding {
@@ -97,7 +117,7 @@ struct NettyApp: App {
     var body: some Scene {
         Settings {
             SettingsView(settings: settings, launchAtLogin: launchAtLogin, location: location,
-                         notifications: notificationPermission,
+                         notifications: notificationPermission, updates: updates,
                          previewModel: { [monitor, speedTester, location, publicAddress, settings] in
                              PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
                                           publicAddress: publicAddress, layout: settings.popoverLayout)

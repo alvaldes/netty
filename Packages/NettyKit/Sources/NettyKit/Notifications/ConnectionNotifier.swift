@@ -1,14 +1,21 @@
-import Foundation
+import AppKit
 @preconcurrency import UserNotifications
 
 /// One system notification.
 nonisolated public struct StatusNotification: Sendable, Equatable {
     public var title: String
     public var body: String
+    /// A later notification with the same identifier replaces this one.
+    public var identifier: String
+    /// Opened when the notification is clicked.
+    public var url: URL?
 
-    public init(title: String, body: String) {
+    /// One identifier for every status notification, so "Back online" replaces "Connection lost".
+    public init(title: String, body: String, identifier: String = "connection-status", url: URL? = nil) {
         self.title = title
         self.body = body
+        self.identifier = identifier
+        self.url = url
     }
 }
 
@@ -23,9 +30,6 @@ nonisolated public struct NotificationClient: Sendable {
         self.post = post
     }
 
-    /// One identifier for every status notification, so "Back online" replaces "Connection lost".
-    private static let identifier = "connection-status"
-
     public static let live = NotificationClient(
         requestAuthorization: {
             UNUserNotificationCenter.current().delegate = ForegroundPresenter.shared
@@ -36,19 +40,28 @@ nonisolated public struct NotificationClient: Sendable {
             content.title = notification.title
             content.body = notification.body
             content.sound = .default
-            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+            if let url = notification.url { content.userInfo = ["url": url.absoluteString] }
+            let request = UNNotificationRequest(identifier: notification.identifier, content: content, trigger: nil)
             UNUserNotificationCenter.current().add(request)
         }
     )
 }
 
-/// Shows notifications while the popover is open too: macOS hides them for the active app by default.
+/// Shows notifications while the popover is open too (macOS hides them for the
+/// active app by default) and opens a notification's link when it is clicked.
 nonisolated private final class ForegroundPresenter: NSObject, UNUserNotificationCenterDelegate, Sendable {
     static let shared = ForegroundPresenter()
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification)
         async -> UNNotificationPresentationOptions {
         [.banner, .sound]
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+              let link = response.notification.request.content.userInfo["url"] as? String,
+              let url = URL(string: link) else { return }
+        await MainActor.run { _ = NSWorkspace.shared.open(url) }
     }
 }
 

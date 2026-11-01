@@ -17,6 +17,7 @@ Your network companion in the macOS menu bar. A dot that tells you at a glance w
 - **Latency, jitter and loss** from a TCP handshake with 1.1.1.1 and 8.8.8.8 every 10 seconds, and right away whenever the network changes or you click the icon: a click confirms a drop or a recovery at once, with the checks the rules need run side by side instead of one per interval.
 - **Speed test** with Apple's built-in `networkQuality`: download, upload and responsiveness. It runs when you ask, or on a schedule (off by default; metered networks are skipped).
 - **Notifications** when the connection drops and when it comes back, with how long you were offline. A degraded connection never notifies, and Focus modes are respected.
+- **Update notices:** Netty asks GitHub for the latest release (every day by default; every 6 hours, every week or off in Settings › General) and notifies you once per new version with what it brings. Settings › General lists the changes and marks the version as outdated; click the notification, that mark or the link in the popover to open the release page. It doesn't install anything itself: Homebrew users run `brew upgrade --cask netty`, everyone else downloads the new DMG.
 - **Network info:** Wi-Fi name (with Location access), Ethernet or hotspot, whether a VPN carries your traffic, and your local and public IP (click one to copy it).
 - **Your popover, your order:** show, hide and drag its sections (Status, Quality, Speed, Network), and switch off single parts such as jitter, the VPN badge or either IP, in Settings › Popover, with a live preview.
 - **Left and right click:** each opens the popover, a quick menu (Settings, Quit), a speed test or Settings, as you choose.
@@ -43,10 +44,10 @@ Netty needs macOS 26 or later.
 
 Both are optional; each only adds something to the popover.
 
-- **Notifications:** connection lost / back online.
+- **Notifications:** connection lost / back online, and new versions.
 - **Location:** macOS shares the Wi-Fi network name only with apps that have Location access. Netty never reads your location.
 
-Netty sends nothing anywhere: no analytics, no telemetry. Its checks go to Apple's captive portal page, Google's fallback, and Cloudflare's 1.1.1.1. The public IP comes from that same 1.1.1.1 (`/cdn-cgi/trace`, over HTTPS), only when you open the popover and at most every 5 minutes; hide it in Settings › Popover and it is never looked up.
+Netty sends nothing anywhere: no analytics, no telemetry. Its checks go to Apple's captive portal page, Google's fallback, and Cloudflare's 1.1.1.1. The public IP comes from that same 1.1.1.1 (`/cdn-cgi/trace`, over HTTPS), only when you open the popover and at most every 5 minutes; hide it in Settings › Popover and it is never looked up. Update checks ask GitHub's API (`api.github.com/repos/alvaldes/netty/releases/latest`) on the schedule you pick, every day by default; set it to Off in Settings › General and only **Check Now** asks.
 
 ## Build from source
 

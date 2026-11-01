@@ -16,11 +16,13 @@ enum SettingsSnapshot {
         let defaults = UserDefaults(suiteName: "com.alvaldes.netty.snapshot")!
         defaults.removePersistentDomain(forName: "com.alvaldes.netty.snapshot")
         let settings = NettySettings(defaults: defaults)
+        // Never checks: nothing here asks it to.
+        let updates = UpdateChecker(currentVersion: AppVersion.short, defaults: defaults)
         for area in SettingsArea.allCases {
             for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
                 let view = SettingsView(settings: settings, launchAtLogin: LaunchAtLogin(),
                                         location: LocationPermission(), notifications: NotificationPermission(),
-                                        previewModel: { PopoverSnapshot.samples[0].1 }, area: area)
+                                        updates: updates, previewModel: { PopoverSnapshot.samples[0].1 }, area: area)
                 render(view, appearance: appearance, to: output.appending(path: "\(area.rawValue)-\(name).png"))
             }
         }
@@ -28,7 +30,7 @@ enum SettingsSnapshot {
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             let view = SettingsView(settings: settings, launchAtLogin: LaunchAtLogin(),
                                     location: LocationPermission(), notifications: NotificationPermission(),
-                                    previewModel: { PopoverSnapshot.samples[0].1 }, area: .icon)
+                                    updates: updates, previewModel: { PopoverSnapshot.samples[0].1 }, area: .icon)
             render(view, appearance: appearance, to: output.appending(path: "icon-monochrome-\(name).png"))
         }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {

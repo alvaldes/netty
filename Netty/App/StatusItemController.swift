@@ -13,13 +13,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let monitor: ConnectionMonitor
     private let speedTester: SpeedTester
     private let publicAddress: PublicAddress
+    private let updates: UpdateChecker
     /// When the popover last closed: a click on the icon closes a transient
     /// popover on mouse-down, before the action runs on mouse-up.
     private var popoverClosedAt = Date.distantPast
 
     init(settings: NettySettings, monitor: ConnectionMonitor, speedTester: SpeedTester, location: LocationPermission,
-         publicAddress: PublicAddress) {
+         publicAddress: PublicAddress, updates: UpdateChecker) {
         self.settings = settings
+        self.updates = updates
         self.publicAddress = publicAddress
         self.monitor = monitor
         self.speedTester = speedTester
@@ -29,7 +31,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // Settings opened from the popover's gear checks too.
         opener.onOpen = { Task { [monitor] in await monitor.quickCheck() } }
         let content = PopoverContainer(settings: settings, monitor: monitor, speedTester: speedTester, location: location,
-                                       publicAddress: publicAddress,
+                                       publicAddress: publicAddress, updates: updates,
                                        openSettings: { [weak self] in
                                            self?.popover.close()
                                            opener.open()
@@ -112,6 +114,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             menu.addItem(.separator())
         }
         menu.addItem(item("Settings…", action: #selector(openSettingsFromMenu), key: ","))
+        if let release = updates.available {
+            menu.addItem(item("Download Netty \(release.version)…", action: #selector(openUpdate)))
+        }
         menu.addItem(.separator())
         menu.addItem(item("Quit Netty", action: #selector(quit), key: "q"))
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
@@ -125,6 +130,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     @objc private func showPopoverFromMenu() { togglePopover() }
     @objc private func openSettingsFromMenu() { settingsOpener.open() }
+    @objc private func openUpdate() { updates.available.map { _ = NSWorkspace.shared.open($0.pageURL) } }
     @objc private func quit() { NSApp.terminate(nil) }
 
     // MARK: - NSPopoverDelegate
@@ -173,16 +179,18 @@ private struct PopoverContainer: View {
     let speedTester: SpeedTester
     let location: LocationPermission
     let publicAddress: PublicAddress
+    let updates: UpdateChecker
     let openSettings: () -> Void
 
     var body: some View {
         PopoverView(
             model: PopoverModel(monitor: monitor, speedTester: speedTester, location: location,
-                                publicAddress: publicAddress, layout: settings.popoverLayout),
+                                publicAddress: publicAddress, layout: settings.popoverLayout, updates: updates),
             actions: PopoverActions(
                 runSpeedTest: { Task { await speedTester.run() } },
                 requestWiFiName: { location.request() },
                 openSettings: openSettings,
+                openUpdate: { updates.available.map { _ = NSWorkspace.shared.open($0.pageURL) } },
                 quit: { NSApp.terminate(nil) }
             )
         )

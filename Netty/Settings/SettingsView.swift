@@ -38,6 +38,7 @@ struct SettingsView: View {
     let launchAtLogin: LaunchAtLogin
     let location: LocationPermission
     let notifications: NotificationPermission
+    let updates: UpdateChecker
     let previewModel: () -> PopoverModel
 
     /// Every opening starts on General, which also holds About.
@@ -46,7 +47,7 @@ struct SettingsView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            SettingsSidebar(selection: $area)
+            SettingsSidebar(selection: $area, updates: updates)
             Divider()
             ScrollView {
                 pane
@@ -74,7 +75,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var pane: some View {
         switch area {
-        case .general: GeneralSettings(launchAtLogin: launchAtLogin)
+        case .general: GeneralSettings(settings: settings, launchAtLogin: launchAtLogin, updates: updates)
         case .popover: PopoverSettings(settings: settings, previewModel: previewModel)
         case .icon: IconSettings(settings: settings)
         case .connection: ConnectionSettings(settings: settings)
@@ -87,6 +88,7 @@ struct SettingsView: View {
 
 private struct SettingsSidebar: View {
     @Binding var selection: SettingsArea
+    let updates: UpdateChecker
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -96,6 +98,7 @@ private struct SettingsSidebar: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Netty").font(.system(size: 17, weight: .bold, design: .rounded))
                     Text("Version \(AppVersion.short)").font(.caption).foregroundStyle(.secondary)
+                    UpdateBadge(updates: updates).padding(.top, 4)
                 }
             }
             .padding(.horizontal, 8)

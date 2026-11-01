@@ -57,7 +57,7 @@ These terms have one meaning everywhere in the app and in the code.
 
 - Per-network quality rules (e.g. stricter at home, looser on a hotspot).
 - Latency sparkline in the popover (last few minutes, in memory only).
-- Auto-updates (Sparkle 2).
+- Auto-updates (Sparkle 2). Needs notarization first; until then Netty only checks GitHub Releases daily and notifies about new versions (UpdateChecker).
 
 ### Out of scope
 

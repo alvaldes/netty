@@ -58,6 +58,14 @@ public final class NettySettings {
         }
     }
 
+    /// How often Netty looks for a new version on GitHub and notifies about it.
+    public var updateCheckSchedule: UpdateCheckSchedule {
+        didSet {
+            defaults.set(updateCheckSchedule.rawValue, forKey: Key.updateCheckSchedule)
+            onChange?()
+        }
+    }
+
     /// The public IP is looked up at Cloudflare (1.1.1.1) only while the popover shows it.
     public var showsPublicIP: Bool {
         get { popoverLayout.isVisible(.publicIP) }
@@ -98,6 +106,7 @@ public final class NettySettings {
         static let skipsMeteredNetworks = "skipsMeteredNetworks"
         static let notifiesWhenOffline = "notifiesWhenOffline"
         static let notifiesWhenBackOnline = "notifiesWhenBackOnline"
+        static let updateCheckSchedule = "updateCheckSchedule"
         static let iconStyle = "iconStyle"
         /// Replaced by the popover's Public IP element.
         static let legacyShowsPublicIP = "showsPublicIP"
@@ -115,6 +124,7 @@ public final class NettySettings {
         skipsMeteredNetworks = defaults.object(forKey: Key.skipsMeteredNetworks) as? Bool ?? true
         notifiesWhenOffline = defaults.object(forKey: Key.notifiesWhenOffline) as? Bool ?? true
         notifiesWhenBackOnline = defaults.object(forKey: Key.notifiesWhenBackOnline) as? Bool ?? true
+        updateCheckSchedule = defaults.string(forKey: Key.updateCheckSchedule).flatMap(UpdateCheckSchedule.init) ?? .daily
         iconStyle = Self.decoded(MenuBarIconStyle.self, forKey: Key.iconStyle, in: defaults) ?? .defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
         popoverLayout = Self.decoded(PopoverLayout.self, forKey: Key.popoverLayout, in: defaults)?.normalized ?? .defaults
